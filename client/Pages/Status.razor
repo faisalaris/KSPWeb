@@ -1,0 +1,132 @@
+﻿@page "/status/{nomorAnggota}"
+
+@using Microsoft.AspNetCore.Components
+
+@inject NavigationManager Navigation
+
+<h3 class="form-title">Status Anggota</h3>
+
+@if (member != null)
+{
+    <div class="card">
+        <div class="card-header">
+            <strong>Status Anggota:</strong>
+            <span class="@(member.Status == "Aktif" ? "status-active" : "status-inactive")">
+                @(member.Status)
+            </span>
+        </div>
+        <div class="card-body">
+            <p><strong>No Anggota:</strong> @member.NomorAnggota</p>
+            <p><strong>NIK:</strong> @member.NIK</p>
+            <p><strong>No. Telp:</strong> @member.NoTelp</p>
+            <p><strong>Email:</strong> @member.Email</p>
+        </div>
+    </div>
+    
+    <h4>Riwayat Transaksi:</h4>
+    <ul class="transaction-list">
+        @foreach (var transaksi in member.RiwayatTransaksi)
+        {
+            <li>@transaksi</li>
+        }
+    </ul>
+    
+
+}
+else
+{
+    <div class="error-message">
+        <p>Nomor Anggota tidak ditemukan.</p>
+    </div>
+
+}
+
+<style>
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    .card-header {
+        font-size: 18px;
+        font-weight: bold;
+        margin-bottom: 10px;
+    }
+
+    .card-body p {
+        margin: 5px 0;
+    }
+
+    .status-active {
+        color: green;
+        font-weight: bold;
+    }
+
+    .status-inactive {
+        color: red;
+        font-weight: bold;
+    }
+
+    .transaction-list {
+        list-style-type: none;
+        padding: 0;
+    }
+
+    .transaction-list li {
+        background: #f9f9f9;
+        padding: 8px;
+        margin-bottom: 5px;
+        border-radius: 5px;
+        border-left: 5px solid #007bff;
+    }
+
+    .error-message {
+        color: red;
+        font-weight: bold;
+        text-align: center;
+        margin-bottom: 15px;
+    }
+
+    .btn-home {
+        display: block;
+        width: 100%;
+        max-width: 200px;
+        padding: 10px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        text-align: center;
+        font-weight: bold;
+        cursor: pointer;
+        margin: 20px auto;
+    }
+
+    .btn-home:hover {
+        background: #0056b3;
+    }
+</style>
+
+@code {
+    [Parameter] public string? nomorAnggota { get; set; }
+    private MemberStatus? member;
+    private WarningModal? warningModal;
+
+    protected override void OnInitialized()
+    {
+        member = DummyService.GetDummyMembers().FirstOrDefault(m => m.NomorAnggota == nomorAnggota);
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+    private void CloseWarningModal()
+    {
+        warningModal?.Show("Nomor anggota tidak ditemukan!");
+    }
+}

@@ -1,0 +1,120 @@
+﻿@page "/loan/{nomorAnggota}"
+
+@using Microsoft.AspNetCore.Components
+
+@inject NavigationManager Navigation
+
+
+
+@if (member != null)
+{
+    <div class="loan-container">
+        <h3>Form Pengajuan Pinjaman</h3>
+        <p><strong>Nomor Anggota:</strong> @member.NomorAnggota</p>
+
+        <label>Jumlah Pinjaman</label>
+        <input type="number" class="input-field" @bind="loanAmount" placeholder="Masukkan jumlah pinjaman" />
+
+        <label>Keperluan</label>
+        <input type="text" class="input-field" @bind="loanPurpose" placeholder="Masukkan keperluan" />
+
+        <label>Tenor (bulan)</label>
+        <input type="number" class="input-field" @bind="loanTenor" placeholder="Masukkan tenor dalam bulan" />
+
+        <button class="btn" @onclick="SimulateLoan">Simulasi</button>
+        <button class="btn btn-primary" @onclick="SubmitLoan">Ajukan Pinjaman</button>
+    </div>
+}
+else
+{
+    <WarningModal @ref="warningModal" Message="Nomor anggota tidak ditemukan!" OnClose="GoBack" />
+}
+
+
+
+<style>
+    .loan-container {
+        max-width: 400px;
+        margin: auto;
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .input-field {
+        width: 100%;
+        padding: 10px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .btn {
+        width: 100%;
+        padding: 10px;
+        margin-top: 10px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn-primary {
+        background: #007bff;
+        color: white;
+    }
+
+    .btn-back {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 15px;
+        background: #6c757d;
+        color: white;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+</style>
+
+@code {
+    [Parameter] public string nomorAnggota { get; set; }
+    private MemberStatus? member;
+    private WarningModal? warningModal;
+    private long loanAmount;
+    private string loanPurpose;
+    private int loanTenor;
+
+    protected override void OnInitialized()
+    {
+        member = DummyService.GetDummyMembers().FirstOrDefault(m => m.NomorAnggota == nomorAnggota);
+    }
+
+    private void SimulateLoan()
+    {
+        if (loanAmount <= 0 || loanTenor <= 0 || string.IsNullOrWhiteSpace(loanPurpose))
+        {
+            warningModal?.Show("Harap isi semua data dengan benar!");
+        }
+        else
+        {
+            warningModal?.Show($"Simulasi: Pinjaman sebesar {loanAmount:C} dengan tenor {loanTenor} bulan.");
+        }
+    }
+
+    private void SubmitLoan()
+    {
+        if (loanAmount <= 0 || loanTenor <= 0 || string.IsNullOrWhiteSpace(loanPurpose))
+        {
+            warningModal?.Show("Harap isi semua data dengan benar!");
+        }
+        else
+        {
+            warningModal?.Show("Pengajuan pinjaman berhasil dikirim!");
+        }
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+}
+

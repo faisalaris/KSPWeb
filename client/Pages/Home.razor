@@ -1,0 +1,363 @@
+﻿@page "/"
+
+@using System.ComponentModel.DataAnnotations
+@inject NavigationManager Navigation
+
+<PageTitle>Home</PageTitle>
+
+<div class="banner"></div>
+<h1>Selamat Datang!!</h1>
+
+<p>Di Koperasi Syariah Pembangunan.</p>
+<p>Ini adalah website untuk mengajukan atau mengecek pinjaman anda</p>
+
+<p>Belum jadi Anggota? Daftarkan diri anda segera ajukan Pinjaman</p>
+
+<!-- Tombol Pendaftaran dan Ajukan Pinjaman -->
+<div class="btn-group">
+    <button class="btn-action btn-daftar" @onclick="GoToRegister">Pendaftaran</button>
+    <button class="btn-action btn-pinjaman" @onclick="OpenLoanModal">Ajukan Pinjaman</button>
+</div>
+
+<!-- Modal Peringatan -->
+<WarningModal @ref="warningModal" @bind-Message="warningMessage" OnClose="RestoreLoanModal" />
+
+<!-- Modal Form Ajukan Pinjaman -->
+@if (isLoanModalOpen)
+{
+    <div class="modal-overlay" @onclick="CloseLoanModal">
+        <div class="modal-content" @onclick:stopPropagation="true">
+            <button class="close-btn" @onclick="CloseLoanModal">&times;</button>
+            <h3 class="form-title">Ajukan Pinjaman</h3>
+
+
+
+                <div class="form-group">
+                    <label>Nomor Anggota:</label>
+                    <InputText @bind-Value="loanApplication.NomorAnggota" class="form-control" />
+                    <!--<validationmessage for="() => loanapplication.nomoranggota" class="text-danger" /> -->
+                </div>
+
+                <div class="form-group">
+                    <label>Nomor Induk KTP:</label>
+                    <InputText @bind-Value="loanApplication.NomorIndukKTP" class="form-control" />
+                    <!--<ValidationMessage For="() => loanApplication.NomorIndukKTP" class="text-danger" />-->
+                </div>
+
+                <div class="button-container">
+                    <button type="submit" class="btn btn-submit-modal" @onclick="GoToStatus">Periksa Status</button>
+                    <button type="button" class="btn btn-submit-modal" @onclick="GoToRegisterLoan">Ajukan Pinjaman</button>
+                </div>
+
+        </div>
+    </div>
+}
+
+
+<style>
+    /* Tombol Aksi */
+
+    .banner {
+        width: 80%;
+        height: 200px;
+        background: url('/images/koperasibanner.png') no-repeat center center;
+        background-size: cover;
+        padding: 2px;
+    }
+
+    .btn-group {
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+        margin-top: 15px;
+    }
+
+    .btn-action {
+        padding: 12px 20px;
+        font-size: 16px;
+        font-weight: bold;
+        border-radius: 30px;
+        border: none;
+        cursor: pointer;
+        transition: 0.3s ease-in-out;
+    }
+
+    .btn-daftar {
+        background: linear-gradient(90deg, #28a745, #218838);
+        color: white;
+    }
+
+        .btn-daftar:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: scale(1.05);
+        }
+
+    .btn-pinjaman {
+        background: linear-gradient(90deg, #007bff, #0056b3);
+        color: white;
+    }
+
+        .btn-pinjaman:hover {
+            background: linear-gradient(90deg, #0056b3, #004494);
+            transform: scale(1.05);
+        }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .modal-content {
+        background: white;
+        padding: 25px;
+        border-radius: 10px;
+        width: 100%;
+        max-width: 500px;
+        max-height: 80vh; /* Batasi tinggi modal */
+        overflow-y: auto; /* Tambahkan scroll jika konten terlalu panjang */
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.3);
+        position: relative;
+    }
+
+    .close-btn {
+        position: absolute;
+        right: 20px;
+        top: 10px;
+        font-size: 24px;
+        background: none;
+        border: none;
+        cursor: pointer;
+    }
+
+    /* Form */
+    .form-container {
+        max-width: 450px;
+        margin: 0 auto;
+    }
+
+    .form-title {
+        text-align: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin-bottom: 15px;
+    }
+
+    .form-group {
+        display: flex;
+        flex-direction: column;
+        margin-bottom: 15px;
+    }
+
+        .form-group label {
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+
+    .form-control {
+        width: 100%;
+        padding: 10px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+
+    .text-danger {
+        font-size: 12px;
+        color: red;
+        margin-top: 5px;
+    }
+
+    .button-container {
+        display: flex;
+        justify-content: space-between; /* Memberikan jarak antar tombol */
+        gap: 15px; /* Menambahkan jarak ekstra antar tombol */
+        margin-top: 20px;
+    }
+
+    .btn-submit-modal {
+        flex: 1; /* Membuat kedua tombol memiliki ukuran fleksibel */
+        max-width: 48%; /* Batas maksimum lebar tiap tombol */
+        padding: 12px;
+        font-size: 14px;
+        font-weight: bold;
+        color: white;
+        background: linear-gradient(90deg, #28a745, #218838);
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        text-align: center;
+    }
+
+        .btn-submit-modal:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: scale(1.05);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
+        }
+
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        color: white;
+        background: linear-gradient(90deg, #28a745, #218838);
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+        .btn-submit:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: scale(1.05);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
+        }
+
+
+    .status-modal {
+        width: 100%;
+        max-width: 450px;
+        padding: 20px;
+        background: white;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    }
+</style>
+
+@code {
+    private string warningMessage = "Nomor anggota tidak boleh kosong!";
+    private bool isModalOpen = false;
+    private bool isLoanModalOpen = false;
+    private bool isWarningModalOpen = false; // Tambahkan ini untuk modal peringatan
+    private void OpenLoanModal() => isLoanModalOpen = true;
+    private void CloseLoanModal() => isLoanModalOpen = false;
+
+    private string NomorAnggota { get; set; } = string.Empty;
+    private WarningModal? warningModal;
+
+    private LoanApplicationModel loanApplication = new();
+
+    private void HandleValidSubmit()
+    {
+        Console.WriteLine("Form submitted successfully");
+    }
+
+    private void HandleLoanSubmit()
+    {
+        Console.WriteLine("Pinjaman berhasil diajukan");
+    }
+
+    private void CheckLoanStatus()
+    {
+        Console.WriteLine("Memeriksa status pinjaman...");
+    }
+
+
+    private void GoToRegister()
+    {
+        Navigation.NavigateTo("/register");
+    }
+
+    private void GoToStatus()
+    {
+        if (string.IsNullOrEmpty(loanApplication.NomorAnggota) && string.IsNullOrEmpty(loanApplication.NomorIndukKTP))
+        {
+            CloseLoanModal();
+            warningModal?.Show("Nomor Anggota atau NIK tidak boleh kosong!");
+        }
+        else
+        {
+            // Cari berdasarkan NIK jika Nomor Anggota kosong
+            if (string.IsNullOrEmpty(loanApplication.NomorAnggota))
+            {
+                var member = DummyService.GetDummyMembers()
+                    .FirstOrDefault(m => m.NIK == loanApplication.NomorIndukKTP);
+
+                if (member != null)
+                {
+                    loanApplication.NomorAnggota = member.NomorAnggota; // Set nomor anggota berdasarkan NIK
+                }
+            }
+
+            // Validasi setelah mendapatkan Nomor Anggota
+            var validMember = DummyService.GetDummyMembers()
+                .FirstOrDefault(m => m.NomorAnggota == loanApplication.NomorAnggota);
+
+            if (validMember == null)
+            {
+                CloseLoanModal();
+                warningModal?.Show("Nomor Anggota atau NIK tidak valid!");
+            }
+            else
+            {
+                isLoanModalOpen = false;
+                Navigation.NavigateTo($"/status/{loanApplication.NomorAnggota}");
+            }
+        }
+    }
+    private void GoToRegisterLoan()
+    {
+        if (string.IsNullOrEmpty(loanApplication.NomorAnggota) && string.IsNullOrEmpty(loanApplication.NomorIndukKTP))
+        {
+            CloseLoanModal();
+            warningModal?.Show("Nomor Anggota atau NIK tidak boleh kosong!");
+        }
+        else
+        {
+            // Cari berdasarkan NIK jika Nomor Anggota kosong
+            if (string.IsNullOrEmpty(loanApplication.NomorAnggota))
+            {
+                var member = DummyService.GetDummyMembers()
+                    .FirstOrDefault(m => m.NIK == loanApplication.NomorIndukKTP);
+
+                if (member != null)
+                {
+                    loanApplication.NomorAnggota = member.NomorAnggota; // Set nomor anggota berdasarkan NIK
+                }
+            }
+
+            // Validasi setelah mendapatkan Nomor Anggota
+            var validMember = DummyService.GetDummyMembers()
+                .FirstOrDefault(m => m.NomorAnggota == loanApplication.NomorAnggota);
+
+            if (validMember == null)
+            {
+                CloseLoanModal();
+                warningModal?.Show("Nomor Anggota atau NIK tidak valid!");
+            }
+            else
+            {
+                isLoanModalOpen = false;
+                Navigation.NavigateTo($"/loan/{loanApplication.NomorAnggota}");
+            }
+        }
+    }
+
+
+
+    private void RestoreLoanModal()
+    {
+        isLoanModalOpen = true;  // Buka kembali modal pinjaman setelah menutup modal warning
+        StateHasChanged();
+    }
+
+    public class LoanApplicationModel
+    {
+        [Required]
+        public string NomorAnggota { get; set; } = string.Empty;
+
+        [Required]
+        public string NomorIndukKTP { get; set; } = string.Empty;
+    }
+}
