@@ -1,7 +1,12 @@
 ﻿@page "/"
 
 @using System.ComponentModel.DataAnnotations
+@using BaseLibrary.Entities
+@using System.Text.Json
+
 @inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime 
+
 
 <PageTitle>Home</PageTitle>
 
@@ -9,18 +14,31 @@
 <h1>Selamat Datang!!</h1>
 
 <p>Di Koperasi Syariah Pembangunan.</p>
-<p>Ini adalah website untuk mengajukan atau mengecek pinjaman anda</p>
-
-<p>Belum jadi Anggota? Daftarkan diri anda segera ajukan Pinjaman</p>
+<p>Ini adalah website untuk mengajukan atau mengecek pinjaman anda, mulai ajukan pinjaman ada disni</p>
 
 <!-- Tombol Pendaftaran dan Ajukan Pinjaman -->
 <div class="btn-group">
-    <button class="btn-action btn-daftar" @onclick="GoToRegister">Pendaftaran</button>
     <button class="btn-action btn-pinjaman" @onclick="OpenLoanModal">Ajukan Pinjaman</button>
 </div>
+<p></p>
+<p>atau cek status pinjaman anda di sini dengan input nomor anggota atau KTP anda</p>
+<div class="form-group">
+    <label>Nomor Anggota:</label>
+    <InputText @bind-Value="loanApplication.NomorAnggota" class="form-control" />
+    <!--<validationmessage for="() => loanapplication.nomoranggota" class="text-danger" /> -->
+</div>
+
+<div class="form-group">
+    <label>Nomor Induk KTP:</label>
+    <InputText @bind-Value="loanApplication.NomorIndukKTP" class="form-control" />
+    <!--<ValidationMessage For="() => loanApplication.NomorIndukKTP" class="text-danger" />-->
+</div>
+<button type="submit" class="btn btn-submit-modal" @onclick="GoToStatus">Periksa Status</button>
 
 <!-- Modal Peringatan -->
 <WarningModal @ref="warningModal" @bind-Message="warningMessage" OnClose="RestoreLoanModal" />
+
+<WarningModal @ref="statusModal" @bind-Message="warningMessage" />
 
 <!-- Modal Form Ajukan Pinjaman -->
 @if (isLoanModalOpen)
@@ -43,12 +61,14 @@
                     <InputText @bind-Value="loanApplication.NomorIndukKTP" class="form-control" />
                     <!--<ValidationMessage For="() => loanApplication.NomorIndukKTP" class="text-danger" />-->
                 </div>
-
                 <div class="button-container">
-                    <button type="submit" class="btn btn-submit-modal" @onclick="GoToStatus">Periksa Status</button>
                     <button type="button" class="btn btn-submit-modal" @onclick="GoToRegisterLoan">Ajukan Pinjaman</button>
                 </div>
 
+                <p>Belum jadi Anggota? Daftarkan diri anda segera ajukan Pinjaman</p>
+                <button class="btn-action btn-daftar" @onclick="GoToRegister">Pendaftaran</button>
+
+                
         </div>
     </div>
 }
@@ -59,7 +79,7 @@
 
     .banner {
         width: 80%;
-        height: 200px;
+        height: 150px;
         background: url('/images/koperasibanner.png') no-repeat center center;
         background-size: cover;
         padding: 2px;
@@ -93,12 +113,12 @@
         }
 
     .btn-pinjaman {
-        background: linear-gradient(90deg, #007bff, #0056b3);
+        background: linear-gradient(90deg, #28a745, #218838);
         color: white;
     }
 
         .btn-pinjaman:hover {
-            background: linear-gradient(90deg, #0056b3, #004494);
+            background: linear-gradient(90deg, #218838, #1e7e34);
             transform: scale(1.05);
         }
 
@@ -240,11 +260,35 @@
     private bool isModalOpen = false;
     private bool isLoanModalOpen = false;
     private bool isWarningModalOpen = false; // Tambahkan ini untuk modal peringatan
-    private void OpenLoanModal() => isLoanModalOpen = true;
-    private void CloseLoanModal() => isLoanModalOpen = false;
+    private string? storedNomorAnggota;
+    private string? storedNomorIndukKTP;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var customerJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "customerData");
+        if (!string.IsNullOrEmpty(customerJson))
+        {
+            var customer = JsonSerializer.Deserialize<Customer>(customerJson);
+            storedNomorIndukKTP = customer?.CitizenID;
+        }
+    }
+
+
+    private void OpenLoanModal()
+    {
+        isLoanModalOpen = true;
+        StateHasChanged(); // Pastikan UI diperbarui
+    }
+    private void CloseLoanModal()
+    {
+        isLoanModalOpen = false;
+        StateHasChanged(); // Pastikan UI diperbarui
+    }
 
     private string NomorAnggota { get; set; } = string.Empty;
     private WarningModal? warningModal;
+
+    private WarningModal? statusModal;
 
     private LoanApplicationModel loanApplication = new();
 
@@ -269,42 +313,32 @@
         Navigation.NavigateTo("/register");
     }
 
-    private void GoToStatus()
+    private async Task GoToStatus()
     {
         if (string.IsNullOrEmpty(loanApplication.NomorAnggota) && string.IsNullOrEmpty(loanApplication.NomorIndukKTP))
         {
             CloseLoanModal();
-            warningModal?.Show("Nomor Anggota atau NIK tidak boleh kosong!");
+            statusModal?.Show("Nomor Anggota atau NIK tidak boleh kosong!");
         }
         else
         {
-            // Cari berdasarkan NIK jika Nomor Anggota kosong
-            if (string.IsNullOrEmpty(loanApplication.NomorAnggota))
+            var customerJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", loanApplication.NomorIndukKTP);
+            if (!string.IsNullOrEmpty(customerJson))
             {
-                var member = DummyService.GetDummyMembers()
-                    .FirstOrDefault(m => m.NIK == loanApplication.NomorIndukKTP);
+                var customer = JsonSerializer.Deserialize<Customer>(customerJson);
 
-                if (member != null)
+                if (customer != null)
                 {
-                    loanApplication.NomorAnggota = member.NomorAnggota; // Set nomor anggota berdasarkan NIK
+                    // Simpan seluruh objek Customer ke LocalStorage agar bisa diambil di Status.razor
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentCustomer", customerJson);
+
+                    // Navigasi ke Status.razor
+                    Navigation.NavigateTo("/status");
+                    return;
                 }
-            }
-
-            // Validasi setelah mendapatkan Nomor Anggota
-            var validMember = DummyService.GetDummyMembers()
-                .FirstOrDefault(m => m.NomorAnggota == loanApplication.NomorAnggota);
-
-            if (validMember == null)
-            {
-                CloseLoanModal();
-                warningModal?.Show("Nomor Anggota atau NIK tidak valid!");
-            }
-            else
-            {
-                isLoanModalOpen = false;
-                Navigation.NavigateTo($"/status/{loanApplication.NomorAnggota}");
-            }
+            }        
         }
+        statusModal?.Show("Nomor Anggota atau NIK tidak ditemukan.");
     }
     private void GoToRegisterLoan()
     {

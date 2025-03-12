@@ -1,17 +1,31 @@
 ﻿@page "/register"
 @using System.ComponentModel.DataAnnotations
+@using Blazored.LocalStorage
+@using BaseLibrary.Entities
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
 
-
-<EditForm Model="user" OnValidSubmit="HandleValidSubmit" class="form-container">
+<EditForm Model="user" OnValidSubmit="HandleValidSubmit" OnInvalidSubmit="HandleInvalidSubmit" class="form-container">
     <h3 class="form-title">Form Pendaftaran</h3>
 
     <DataAnnotationsValidator />
     <ValidationSummary class="validation-summary" />
 
     <div class="form-group">
+        <label>Upload Gambar KTP:</label>
+        <InputFile OnChange="HandleFileUpload" class="form-control" />
+    </div>
+
+    <div class="form-group">
+        <label>KTP:</label>
+        <InputText @bind-Value="user.CitizenID" class="form-control" />
+        <ValidationMessage For="() => user.CitizenID" class="text-danger" />
+    </div>
+
+    <div class="form-group">
         <label>Nama:</label>
-        <InputText @bind-Value="user.Nama" class="form-control" />
-        <ValidationMessage For="() => user.Nama" class="text-danger" />
+        <InputText @bind-Value="user.Name" class="form-control" />
+        <ValidationMessage For="() => user.Name" class="text-danger" />
     </div>
 
     <div class="form-group">
@@ -22,37 +36,31 @@
 
     <div class="form-group">
         <label>Alamat KTP:</label>
-        <InputText @bind-Value="user.AlamatKTP" class="form-control" />
-        <ValidationMessage For="() => user.AlamatKTP" class="text-danger" />
+        <InputText @bind-Value="user.AddressID" class="form-control" />
+        <ValidationMessage For="() => user.AddressID" class="text-danger" />
     </div>
 
     <div class="form-group">
         <label>Alamat Domisili:</label>
-        <InputText @bind-Value="user.AlamatDomisili" class="form-control" />
-        <ValidationMessage For="() => user.AlamatDomisili" class="text-danger" />
-    </div>
-
-    <div class="form-group">
-        <label>Upload Gambar KTP:</label>
-        <InputFile OnChange="HandleFileUpload" class="form-control" />
+        <InputText @bind-Value="user.AddressDomicili" class="form-control" />
+        <ValidationMessage For="() => user.AddressDomicili" class="text-danger" />
     </div>
 
     <div class="form-group">
         <label>Nama Ibu Kandung:</label>
-        <InputText @bind-Value="user.NamaIbuKandung" class="form-control" />
-        <ValidationMessage For="() => user.NamaIbuKandung" class="text-danger" />
+        <InputText @bind-Value="user.MaindenName" class="form-control" />
+        <ValidationMessage For="() => user.MaindenName" class="text-danger" />
     </div>
 
     <div class="form-group">
         <label>Nomor HP:</label>
-        <InputText @bind-Value="user.NomorHP" class="form-control" />
-        <ValidationMessage For="() => user.NomorHP" class="text-danger" />
+        <InputText @bind-Value="user.MobilePhone" class="form-control" />
+        <ValidationMessage For="() => user.MobilePhone" class="text-danger" />
     </div>
-
     <div class="form-group">
-        <label>Nomor Telepon Darurat:</label>
-        <InputText @bind-Value="user.NomorTeleponDarurat" class="form-control" />
-        <ValidationMessage For="() => user.NomorTeleponDarurat" class="text-danger" />
+        <label>Nomor Darurat:</label>
+        <InputText @bind-Value="user.EmergencyPhone" class="form-control" />
+        <ValidationMessage For="() => user.EmergencyPhone" class="text-danger" />
     </div>
 
     <div class="button-container">
@@ -60,6 +68,9 @@
     </div>
 </EditForm>
 
+
+<!-- Warning Modal -->
+<WarningModal @ref="warningModal" />
 
 <style>
     .form-container {
@@ -110,14 +121,14 @@
     }
 
     .btn-submit {
-        width: 100%; /* Lebar penuh */
+        width: 100%;
         padding: 12px;
         font-size: 18px;
         font-weight: bold;
         color: white;
-        background: linear-gradient(90deg, #28a745, #218838); /* Gradasi hijau */
+        background: linear-gradient(90deg, #28a745, #218838);
         border: none;
-        border-radius: 30px; /* Membuat bentuk rounded */
+        border-radius: 30px;
         cursor: pointer;
         transition: all 0.3s ease-in-out;
         box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
@@ -125,49 +136,54 @@
 
         .btn-submit:hover {
             background: linear-gradient(90deg, #218838, #1e7e34);
-            transform: scale(1.05); /* Efek sedikit membesar saat hover */
+            transform: scale(1.05);
             box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
         }
-
 </style>
 
 @code {
-    private UserRegistrationModel user = new();
-
-    private void HandleValidSubmit()
+    private Customer user = new();
+    private WarningModal? warningModal;
+    private async Task HandleValidSubmit()
     {
-        Console.WriteLine("Form submitted successfully");
+        // Set Status ke Active
+        user.Status = "Active";
+
+        // Tambahkan Transaction History saat pendaftaran
+        user.TransactionHistories.Add(new TransactionHistory
+            {
+                DateTime = DateTime.Now,
+                Description = "Pendaftaran berhasil"
+            });
+
+        await LocalStorage.SetItemAsync(user.CitizenID, user);
+        Console.WriteLine("Data berhasil disimpan ke LocalStorage");
+        await Task.Delay(2000);
+        // Tampilkan modal setelah berhasil mendaftar
+        warningModal.Show("Pendaftaran berhasil!", "images/circle.png");
+        // Tunggu sebentar sebelum redirect (biar user sempat lihat pesan sukses)
+        await Task.Delay(3000);
+
+        // Redirect ke halaman Home
+        Navigation.NavigateTo("/");
     }
 
-    private void HandleFileUpload(InputFileChangeEventArgs e)
+    private void HandleInvalidSubmit(EditContext context)
+    {
+        // Jika validasi gagal, tampilkan modal peringatan
+        warningModal.Show("Harap isi semua bidang yang diperlukan!", "images/forbidden.png");
+    }
+
+    private async void HandleFileUpload(InputFileChangeEventArgs e)
     {
         var file = e.File;
-        Console.WriteLine($"File uploaded: {file.Name}");
-    }
-
-    public class UserRegistrationModel
-    {
-        [Required]
-        public string Nama { get; set; } = string.Empty;
-
-        [Required, EmailAddress]
-        public string Email { get; set; } = string.Empty;
-
-        [Required]
-        public string AlamatKTP { get; set; } = string.Empty;
-
-        [Required]
-        public string AlamatDomisili { get; set; } = string.Empty;
-
-        public byte[]? GambarKTP { get; set; }
-
-        [Required]
-        public string NamaIbuKandung { get; set; } = string.Empty;
-
-        [Required, Phone]
-        public string NomorHP { get; set; } = string.Empty;
-
-        [Required, Phone]
-        public string NomorTeleponDarurat { get; set; } = string.Empty;
+        if (file != null)
+        {
+            using var stream = file.OpenReadStream();
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            user.CitizenImage = Convert.ToBase64String(ms.ToArray());
+            Console.WriteLine($"File uploaded: {file.Name}");
+        }
     }
 }
