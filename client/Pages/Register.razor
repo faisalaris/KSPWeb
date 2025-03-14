@@ -157,6 +157,8 @@
             });
 
         await LocalStorage.SetItemAsync(user.CitizenID, user);
+        await LocalStorage.SetItemAsync("currentCustomerLoan", user);
+
         Console.WriteLine("Data berhasil disimpan ke LocalStorage");
         await Task.Delay(2000);
         // Tampilkan modal setelah berhasil mendaftar
@@ -165,13 +167,13 @@
         await Task.Delay(3000);
 
         // Redirect ke halaman Home
-        Navigation.NavigateTo("/");
+        Navigation.NavigateTo("/Loan/");
     }
 
     private void HandleInvalidSubmit(EditContext context)
     {
         // Jika validasi gagal, tampilkan modal peringatan
-        warningModal.Show("Harap isi semua bidang yang diperlukan!", "images/forbidden.png");
+        warningModal.Show("Harap isi semua bidang yang diperlukan!", "images/exclamation-mark.png");
     }
 
     private async void HandleFileUpload(InputFileChangeEventArgs e)

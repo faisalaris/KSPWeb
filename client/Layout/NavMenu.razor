@@ -1,49 +1,92 @@
 ﻿<style>
-    /* Navbar Background Gradasi */
+    /* Navbar atas dengan border dan shadow */
     .top-row {
-        background: linear-gradient(to right, green, yellow) !important;
+        background: linear-gradient(to right, #007f00, #005700) !important;
+        border-bottom: 3px solid #004000;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        padding: 10px;
     }
 
-    /* Sidebar Background Gradasi */
+    /* Sidebar dengan border kanan dan shadow */
     .nav-container {
-        background: linear-gradient(to bottom, green, yellow);
+        background: linear-gradient(to bottom, #007f00, #005700);
         min-height: 100vh;
         display: flex;
         flex-direction: column;
-        justify-content: space-between; /* Menjaga logo tetap di bawah */
         padding-top: 10px;
+        border-right: 3px solid #004000;
+        box-shadow: 4px 0px 10px rgba(0, 0, 0, 0.2);
+        position: relative; /* Agar logo bisa diposisikan secara absolut */
     }
 
     .nav-scrollable {
         overflow-y: auto;
-        flex-grow: 1; /* Menu tetap fleksibel */
+        flex-grow: 1;
+        padding-bottom: 100px; /* Agar menu tidak menumpuk dengan logo */
     }
 
+    /* Posisi Logo di Tengah */
     .logo-container {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
         text-align: center;
-        padding: 10px;
     }
 
     .logo {
-        width: 40%;
-        max-width: 150px;
+        width: 60%;
+        max-width: 140px;
+        opacity: 0.7; /* Transparansi */
+        transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
+    }
+
+        /* Hover effect agar lebih interaktif */
+        .logo:hover {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+    /* Styling menu */
+    .nav-item {
+        padding: 10px;
     }
 
     .nav-link {
         color: white !important;
         font-weight: bold;
-        display: block;
-        padding: 10px;
-        border-radius: 5px;
-        transition: background 0.3s;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px;
+        border-radius: 8px;
+        transition: all 0.3s ease-in-out;
+        font-size: 16px;
     }
 
         .nav-link:hover {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.05);
+            box-shadow: 0px 2px 8px rgba(255, 255, 255, 0.3);
         }
+
+    /* Icon styling */
+    .bi {
+        font-size: 20px;
+    }
+
+    /* Navbar Toggler */
+    .navbar-toggler {
+        border: none;
+        outline: none;
+    }
+
+    .navbar-toggler-icon {
+        filter: invert(1);
+    }
 </style>
 
-<div class="top-row ps-3 navbar navbar-dark">
+<div class="top-row navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">KSP</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
@@ -52,16 +95,16 @@
     </div>
 </div>
 
-<div class="@NavMenuCssClass nav-container" @onclick="ToggleNavMenu">
+<div class="@NavMenuCssClass nav-container">
     <nav class="flex-column nav-scrollable">
-        <div class="nav-item px-3">
+        <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
+                <span class="bi bi-house-door-fill"></span> Home
             </NavLink>
         </div>
     </nav>
 
-    <!-- Logo di bagian bawah navbar -->
+    <!-- Logo di tengah navbar -->
     <div class="logo-container">
         <img src="/images/logo.png" alt="Logo" class="logo" />
     </div>

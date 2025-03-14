@@ -1,28 +1,45 @@
-﻿@page "/loan/{nomorAnggota}"
+﻿@page "/loan/"
 
 @using Microsoft.AspNetCore.Components
+@using System.ComponentModel.DataAnnotations
+@using Blazored.LocalStorage
+@using BaseLibrary.Entities
+@using System.Text.Json
+@using Microsoft.AspNetCore.Components.Forms
 
+@inject ILocalStorageService LocalStorage
 @inject NavigationManager Navigation
-
-
 
 @if (member != null)
 {
     <div class="loan-container">
         <h3>Form Pengajuan Pinjaman</h3>
-        <p><strong>Nomor Anggota:</strong> @member.NomorAnggota</p>
 
-        <label>Jumlah Pinjaman</label>
-        <input type="number" class="input-field" @bind="loanAmount" placeholder="Masukkan jumlah pinjaman" />
+        <EditForm Model="loanTransaction" OnValidSubmit="SubmitLoan">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
 
-        <label>Keperluan</label>
-        <input type="text" class="input-field" @bind="loanPurpose" placeholder="Masukkan keperluan" />
+            <div>
+                <label>Jumlah Pinjaman</label>
+                <InputNumber @bind-Value="loanTransaction.LoanAmount" class="input-field" />
+                <ValidationMessage For="@(() => loanTransaction.LoanAmount)" />
+            </div>
 
-        <label>Tenor (bulan)</label>
-        <input type="number" class="input-field" @bind="loanTenor" placeholder="Masukkan tenor dalam bulan" />
+            <div>
+                <label>Keperluan</label>
+                <InputText @bind-Value="loanTransaction.LoanPurpose" class="input-field" />
+                <ValidationMessage For="@(() => loanTransaction.LoanPurpose)" />
+            </div>
 
-        <button class="btn" @onclick="SimulateLoan">Simulasi</button>
-        <button class="btn btn-primary" @onclick="SubmitLoan">Ajukan Pinjaman</button>
+            <div>
+                <label>Tenor (bulan)</label>
+                <InputNumber @bind-Value="loanTransaction.LoanTenor" class="input-field" />
+                <ValidationMessage For="@(() => loanTransaction.LoanTenor)" />
+            </div>
+
+            <button class="btn-submit" type="button" @onclick="SimulateLoan">Simulasi</button>
+            <button class="btn-submit" type="submit">Ajukan Pinjaman</button>
+        </EditForm>
     </div>
 }
 else
@@ -30,7 +47,7 @@ else
     <WarningModal @ref="warningModal" Message="Nomor anggota tidak ditemukan!" OnClose="GoBack" />
 }
 
-
+<WarningModal @ref="statusModal" @bind-Message="warningMessage" />
 
 <style>
     .loan-container {
@@ -64,52 +81,102 @@ else
         color: white;
     }
 
-    .btn-back {
-        display: block;
-        margin: 20px auto;
-        padding: 10px 15px;
-        background: #6c757d;
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        font-weight: bold;
         color: white;
-        border-radius: 5px;
+        background: linear-gradient(90deg, #28a745, #218838);
+        border: none;
+        border-radius: 30px;
         cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+        margin-top: 15px; /* Memberikan jarak antar tombol */
     }
+
+        .btn-submit:first-of-type {
+            margin-top: 20px; /* Jarak lebih besar untuk tombol pertama */
+        }
+
+        .btn-submit:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: scale(1.05);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
+        }
 </style>
 
 @code {
-    [Parameter] public string nomorAnggota { get; set; }
-    private MemberStatus? member;
+    private Customer? member;
     private WarningModal? warningModal;
-    private long loanAmount;
-    private string loanPurpose;
-    private int loanTenor;
+    private LoanTransaction loanTransaction = new();
+    private string warningMessage = "Nomor anggota tidak boleh kosong!";
+    private bool isModalOpen = false;
+    private WarningModal? statusModal;
 
-    protected override void OnInitialized()
+
+    protected override async Task OnInitializedAsync()
     {
-        member = DummyService.GetDummyMembers().FirstOrDefault(m => m.NomorAnggota == nomorAnggota);
+        var customerJson = await LocalStorage.GetItemAsStringAsync("currentCustomerLoan");
+
+        if (!string.IsNullOrEmpty(customerJson))
+        {
+            member = JsonSerializer.Deserialize<Customer>(customerJson);
+        }
+
+        if (member == null)
+        {
+            statusModal?.Show("Nomor anggota tidak ditemukan!", "images/exclamation-mark.png");
+        }
+        else
+        {
+            // Set MemberID otomatis berdasarkan data anggota yang login
+            loanTransaction.MemberID = member.CitizenID;
+        }
     }
 
     private void SimulateLoan()
     {
-        if (loanAmount <= 0 || loanTenor <= 0 || string.IsNullOrWhiteSpace(loanPurpose))
+        if (loanTransaction.LoanAmount <= 0 || loanTransaction.LoanTenor <= 0 || string.IsNullOrWhiteSpace(loanTransaction.LoanPurpose))
         {
-            warningModal?.Show("Harap isi semua data dengan benar!");
+            statusModal?.Show("Harap isi semua data dengan benar!", "images/exclamation-mark.png");
         }
         else
         {
-            warningModal?.Show($"Simulasi: Pinjaman sebesar {loanAmount:C} dengan tenor {loanTenor} bulan.");
+            statusModal?.Show($"Simulasi: Pinjaman sebesar Rp {loanTransaction.LoanAmount} dengan tenor {loanTransaction.LoanTenor} bulan.");
         }
     }
 
-    private void SubmitLoan()
+    private async Task SubmitLoan()
     {
-        if (loanAmount <= 0 || loanTenor <= 0 || string.IsNullOrWhiteSpace(loanPurpose))
+        if (loanTransaction.LoanAmount <= 0 || loanTransaction.LoanTenor <= 0 || string.IsNullOrWhiteSpace(loanTransaction.LoanPurpose))
         {
-            warningModal?.Show("Harap isi semua data dengan benar!");
+            statusModal?.Show("Harap isi semua data dengan benar!", "images/exclamation-mark.png");
+            return;
         }
-        else
+
+        var customerJson = await LocalStorage.GetItemAsStringAsync("currentCustomerLoan");
+        if (string.IsNullOrEmpty(customerJson))
         {
-            warningModal?.Show("Pengajuan pinjaman berhasil dikirim!");
+            statusModal?.Show("Data anggota tidak ditemukan!", "images/exclamation-mark.png");
+            return;
         }
+
+        var customer = JsonSerializer.Deserialize<Customer>(customerJson);
+
+        customer.TransactionHistories.Add(new TransactionHistory
+            {
+                DateTime = DateTime.Now,
+                Description = $"Pengajuan pinjaman sebesar Rp. {loanTransaction.LoanAmount} untuk {loanTransaction.LoanPurpose} selama {loanTransaction.LoanTenor} bulan."
+            });
+
+        await LocalStorage.SetItemAsync(customer.CitizenID, customer);
+        await LocalStorage.SetItemAsync(loanTransaction.LoanID, loanTransaction);
+
+        statusModal?.Show("Pengajuan pinjaman berhasil dikirim!", "images/circle.png");
+        // Simpan transaksi ke local storage untuk sementara
+        
     }
 
     private void GoBack()
@@ -117,4 +184,3 @@ else
         Navigation.NavigateTo("/");
     }
 }
-

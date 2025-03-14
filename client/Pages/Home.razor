@@ -340,7 +340,7 @@
         }
         statusModal?.Show("Nomor Anggota atau NIK tidak ditemukan.");
     }
-    private void GoToRegisterLoan()
+    private async Task GoToRegisterLoan()
     {
         if (string.IsNullOrEmpty(loanApplication.NomorAnggota) && string.IsNullOrEmpty(loanApplication.NomorIndukKTP))
         {
@@ -349,33 +349,23 @@
         }
         else
         {
-            // Cari berdasarkan NIK jika Nomor Anggota kosong
-            if (string.IsNullOrEmpty(loanApplication.NomorAnggota))
+            var customerJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", loanApplication.NomorIndukKTP);
+            if (!string.IsNullOrEmpty(customerJson))
             {
-                var member = DummyService.GetDummyMembers()
-                    .FirstOrDefault(m => m.NIK == loanApplication.NomorIndukKTP);
+                var customer = JsonSerializer.Deserialize<Customer>(customerJson);
 
-                if (member != null)
+                if (customer != null)
                 {
-                    loanApplication.NomorAnggota = member.NomorAnggota; // Set nomor anggota berdasarkan NIK
+                    // Simpan seluruh objek Customer ke LocalStorage agar bisa diambil di Status.razor
+                    await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentCustomerLoan", customerJson);
+
+                    // Navigasi ke Status.razor
+                    Navigation.NavigateTo("/loan");
+                    return;
                 }
             }
-
-            // Validasi setelah mendapatkan Nomor Anggota
-            var validMember = DummyService.GetDummyMembers()
-                .FirstOrDefault(m => m.NomorAnggota == loanApplication.NomorAnggota);
-
-            if (validMember == null)
-            {
-                CloseLoanModal();
-                warningModal?.Show("Nomor Anggota atau NIK tidak valid!");
-            }
-            else
-            {
-                isLoanModalOpen = false;
-                Navigation.NavigateTo($"/loan/{loanApplication.NomorAnggota}");
-            }
         }
+        statusModal?.Show("Nomor Anggota atau NIK tidak ditemukan.");
     }
 
 
