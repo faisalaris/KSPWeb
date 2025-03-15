@@ -1,0 +1,249 @@
+﻿@page "/loanlist"
+
+@using Microsoft.AspNetCore.Components
+@using Blazored.LocalStorage
+@using Microsoft.JSInterop
+@using System.Text.Json
+
+@inject ILocalStorageService LocalStorage
+@inject IJSRuntime JS
+
+<h3>Daftar Pinjaman</h3>
+
+<input type="text" @bind="searchTerm" placeholder="Cari LoanID atau Nama Anggota" class="search-box" />
+
+<table class="loan-table">
+    <thead>
+        <tr>
+            <th @onclick="() => SortByColumn(nameof(LoanTransaction.LoanID))">Loan ID</th>
+            <th @onclick="() => SortByColumn(nameof(LoanTransaction.MemberID))">Nama Anggota</th>
+            <th>Nomor KTP</th>
+            <th>Gambar</th>
+            <th @onclick="() => SortByColumn(nameof(LoanTransaction.LoanAmount))">Jumlah Pinjaman</th>
+            <th @onclick="() => SortByColumn(nameof(LoanTransaction.LoanTenor))">Tenor</th>
+            <th @onclick="() => SortByColumn(nameof(LoanTransaction.LoanStatus))">Status</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var loan in FilteredLoans())
+        {
+            <tr>
+                <td>@loan.LoanID</td>
+                <td>@loan.Name</td>
+                <td>@loan.CitizenID</td>
+                <td>
+                    <button class="btn-download" @onclick="() => DownloadImage(loan.CitizenImage)">Download KTP</button>
+                </td>
+                <td>@loan.LoanAmount</td>
+                <td>@loan.LoanTenor bulan</td>
+                <td>
+                    <span class="@GetStatusClass(loan.LoanStatus)">
+                        @loan.LoanStatus
+                    </span>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+<style>
+    .search-box {
+        width: 100%;
+        padding: 10px;
+        margin-bottom: 15px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .loan-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+
+        .loan-table th, .loan-table td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+
+        .loan-table th {
+            cursor: pointer;
+            background: #f4f4f4;
+        }
+
+    .btn-download {
+        background-color: #2E7D32; /* Hijau */
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 8px;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+
+        .btn-download:hover {
+            background-color: #1B5E20; /* Hijau lebih gelap */
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-download:active {
+            transform: scale(0.95);
+        }
+
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        font-size: 14px;
+        font-weight: bold;
+        border-radius: 15px;
+        box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+        text-align: center;
+        min-width: 80px;
+    }
+
+    .status-disetujui {
+        background-color: #2E7D32;
+        color: white;
+    }
+    /* Hijau */
+    .status-pending {
+        background-color: white;
+        color: black;
+        border: 1px solid #ddd;
+    }
+    /* Putih */
+    .status-telat {
+        background-color: #FBC02D;
+        color: black;
+    }
+    /* Kuning */
+    .status-ditolak {
+        background-color: #FB8C00;
+        color: white;
+    }
+    /* Orange */
+    .status-selesai {
+        background-color: #1565C0;
+        color: white;
+    }
+    /* Biru */
+
+    .status-badge:hover {
+        box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.3);
+    }
+</style>
+
+@code {
+    private List<LoanTransaction> loanList = new();
+    private string searchTerm = "";
+    private string sortedColumn = "";
+    private bool sortAscending = true;
+
+    private string GetStatusClass(string status)
+    {
+        return status switch
+        {
+            "Disetujui" => "status-badge status-disetujui",
+            "Pending" => "status-badge status-pending",
+            "Telat" => "status-badge status-telat",
+            "Ditolak" => "status-badge status-ditolak",
+            "Selesai" => "status-badge status-selesai",
+            _ => "status-badge"
+        };
+    }
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        foreach (var key in await LocalStorage.KeysAsync())
+        {
+            if (key.StartsWith("2025"))
+            {
+                var data = await LocalStorage.GetItemAsStringAsync(key);
+                if (!string.IsNullOrEmpty(data))
+                {
+                    var loan = JsonSerializer.Deserialize<LoanTransaction>(data);
+                    if (loan != null)
+                    {
+                        var customerData = await LocalStorage.GetItemAsStringAsync(loan.MemberID);
+                        if (!string.IsNullOrEmpty(customerData))
+                        {
+                            var customer = JsonSerializer.Deserialize<Customer>(customerData);
+                            if (customer != null)
+                            {
+                                loan.CitizenID = customer.CitizenID;
+                                loan.CitizenImage = customer.CitizenImage;
+                                loan.Name = customer.Name;
+                            }
+                        }
+                        loanList.Add(loan);
+                    }
+                }
+            }
+        }
+    }
+
+    private IEnumerable<LoanTransaction> FilteredLoans()
+    {
+        var filtered = loanList.Where(loan =>
+            loan.LoanID.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+            loan.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+        return sortedColumn switch
+        {
+            nameof(LoanTransaction.LoanAmount) => sortAscending ?
+                filtered.OrderBy(l => l.LoanAmount) : filtered.OrderByDescending(l => l.LoanAmount),
+            nameof(LoanTransaction.LoanTenor) => sortAscending ?
+                filtered.OrderBy(l => l.LoanTenor) : filtered.OrderByDescending(l => l.LoanTenor),
+            _ => filtered
+        };
+    }
+
+    private void SortByColumn(string columnName)
+    {
+        if (sortedColumn == columnName)
+        {
+            sortAscending = !sortAscending;
+        }
+        else
+        {
+            sortedColumn = columnName;
+            sortAscending = true;
+        }
+    }
+
+    private async Task DownloadImage(string imageData)
+    {
+        if (!string.IsNullOrEmpty(imageData))
+        {
+            string formattedData = $"data:image/png;base64,{imageData}";
+            await JS.InvokeVoidAsync("downloadImage", formattedData);
+        }
+    }
+
+    public class LoanTransaction
+    {
+        public string LoanID { get; set; } = "";
+        public string MemberID { get; set; } = "";
+        public decimal LoanAmount { get; set; }
+        public int LoanTenor { get; set; }
+        public string LoanStatus { get; set; } = "";
+        public string CitizenID { get; set; } = "";
+        public string CitizenImage { get; set; } = "";
+        public string Name { get; set; } = "";
+    }
+
+    public class Customer
+    {
+        public string CustomerID { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string CitizenID { get; set; } = "";
+        public string CitizenImage { get; set; } = "";
+    }
+}

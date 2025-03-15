@@ -1,0 +1,175 @@
+﻿@page "/login"
+
+@using Microsoft.AspNetCore.Components
+@using System.ComponentModel.DataAnnotations
+@using Blazored.LocalStorage
+@using Microsoft.AspNetCore.Components.Forms
+
+@inject ILocalStorageService LocalStorage
+@inject NavigationManager Navigation
+@inject IJSRuntime JSRuntime
+
+<EditForm Model="loginModel" OnValidSubmit="HandleLogin">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="login-container">
+        <h2>Login</h2>
+
+        <div>
+            <label>Username</label>
+            <InputText @bind-Value="loginModel.Username" class="input-field" />
+            <ValidationMessage For="@(() => loginModel.Username)" />
+        </div>
+
+        <div>
+            <label>Password</label>
+            <InputText @bind-Value="loginModel.Password" class="input-field" type="password" />
+            <ValidationMessage For="@(() => loginModel.Password)" />
+        </div>
+
+        <button type="submit" class="btn-login">Login</button>
+    </div>
+</EditForm>
+
+<!-- Modal Selamat Datang -->
+@if (showWelcomeModal)
+{
+    <div class="modal-overlay">
+        <div class="modal-box">
+            <p>Selamat datang, Admin!</p>
+            <button class="btn-ok" @onclick="CloseModalAndRedirect">OK</button>
+        </div>
+    </div>
+}
+
+<style>
+    .login-container {
+        max-width: 360px;
+        margin: auto;
+        background: white;
+        padding: 25px;
+        border-radius: 12px;
+        box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.15);
+        text-align: center;
+        transition: transform 0.3s ease-in-out;
+    }
+
+        .login-container:hover {
+            transform: scale(1.02);
+        }
+
+    .input-field {
+        width: 100%;
+        padding: 12px;
+        margin: 10px 0;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        font-size: 16px;
+    }
+
+        .input-field:focus {
+            border-color: #28a745;
+            outline: none;
+            box-shadow: 0px 0px 6px rgba(40, 167, 69, 0.5);
+        }
+
+    .btn-login {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
+        font-weight: bold;
+        color: white;
+        background: linear-gradient(90deg, #28a745, #218838);
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease-in-out;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+        .btn-login:hover {
+            background: linear-gradient(90deg, #218838, #1e7e34);
+            transform: scale(1.05);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
+        }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .modal-box {
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        text-align: center;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .btn-ok {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        background: #28a745;
+        color: white;
+    }
+
+        .btn-ok:hover {
+            background: #218838;
+        }
+</style>
+
+@code {
+    private LoginModel loginModel = new();
+    private bool showWelcomeModal = false;
+
+    [Parameter] public EventCallback<bool> OnLoginStatusChanged { get; set; }
+
+    private async Task HandleLogin()
+    {
+        // Simulasi autentikasi sederhana
+        if (loginModel.Username == "admin" && loginModel.Password == "password123")
+        {
+            // Simpan user ke LocalStorage
+            await LocalStorage.SetItemAsStringAsync("currentUser", loginModel.Username);
+
+            await OnLoginStatusChanged.InvokeAsync(true);
+
+            // Tampilkan modal selamat datang
+            showWelcomeModal = true;
+        }
+        else
+        {
+            Console.WriteLine("Login gagal. Username atau password salah.");
+        }
+    }
+
+    private async Task CloseModalAndRedirect()
+    {
+        showWelcomeModal = false;
+        Navigation.NavigateTo("/");
+        // Refresh browser menggunakan JavaScript
+        await JSRuntime.InvokeVoidAsync("reloadPage");
+    }
+
+    public class LoginModel
+    {
+        [Required(ErrorMessage = "Username wajib diisi!")]
+        public string Username { get; set; } = "";
+
+        [Required(ErrorMessage = "Password wajib diisi!")]
+        [MinLength(6, ErrorMessage = "Password minimal 6 karakter!")]
+        public string Password { get; set; } = "";
+    }
+}

@@ -13,6 +13,7 @@ namespace BaseLibrary.Entities
         {
             // LoanID otomatis dibuat berdasarkan timestamp + angka random (unik)
             LoanID = $"{DateTime.UtcNow:yyyyMMddHHmmssfff}{new Random().Next(100, 999)}";
+            LoanStatus = "Pending";
         }
 
         public string LoanID { get; set; }
@@ -26,5 +27,6 @@ namespace BaseLibrary.Entities
         [Required(ErrorMessage = "Tenor tidak boleh 0 ")]
         [Range(1, double.MaxValue, ErrorMessage = "Jumlah pinjaman harus lebih dari 0.")]
         public decimal LoanAmount { get; set; }
+        public string LoanStatus { get; set; }
     }
 }

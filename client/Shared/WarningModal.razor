@@ -57,6 +57,7 @@
 
 @code {
     [Parameter] public string Message { get; set; } = "Pesan peringatan.";
+    [Parameter] public EventCallback<string> MessageChanged { get; set; }
     [Parameter] public string ImageSrc { get; set; } = "images/not-found.png"; // Parameter untuk gambar
     [Parameter] public EventCallback OnClose { get; set; }
 
@@ -65,6 +66,7 @@
     public void Show(string message, string? imageSrc = null)
     {
         Message = message;
+        MessageChanged.InvokeAsync(message);
         ImageSrc = imageSrc ?? "images/not-found.png"; // Jika tidak diisi, pakai default
         IsOpen = true;
         StateHasChanged();

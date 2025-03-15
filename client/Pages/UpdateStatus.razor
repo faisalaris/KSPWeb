@@ -1,0 +1,301 @@
+﻿@page "/updatestatus"
+
+@using Microsoft.AspNetCore.Components
+@using Blazored.LocalStorage
+@using System.Text.Json
+@using BaseLibrary.Entities
+
+@inject NavigationManager Navigation
+@inject ILocalStorageService LocalStorage
+
+<div class="update-status-container">
+    <h3 class="title">Tambah Riwayat Transaksi</h3>
+
+    @if (member != null && loanTransactions.Any())
+    {
+        <EditForm Model="member" OnValidSubmit="SaveTransaction" class="form-container">
+            <div class="form-group">
+                <label>Nomor Anggota:</label>
+                <InputText @bind-Value="memberid" Disabled="@(string.IsNullOrEmpty(member.MemberID) ? false : true)" class="input-field" />
+            </div>
+
+            <div class="form-group">
+                <label>Loan ID:</label>
+                <InputSelect @bind-Value="selectedLoanID" @onchange="OnLoanIDChange" class="input-field">
+                    <option value="">-- Pilih Loan ID --</option>
+                    @foreach (var loan in loanTransactions)
+                    {
+                        <option value="@loan.LoanID">@loan.LoanID</option>
+                    }
+                </InputSelect>
+            </div>
+
+            <div class="form-group">
+                <label>Status:</label>
+                <InputSelect @bind-Value="status" class="input-field">
+                    <option value="Disetujui">Disetujui</option>
+                    <option value="Telat">Telat</option>
+                    <option value="Ditolak">Ditolak</option>
+                    <option value="Selesai">Selesai</option>
+                </InputSelect>
+            </div>
+
+            <div class="form-group">
+                <label>Tanggal:</label>
+                <InputDate @bind-Value="date" class="input-field" />
+            </div>
+
+            <div class="form-group">
+                <label>Deskripsi:</label>
+                <InputText @bind-Value="description" class="input-field" />
+            </div>
+
+            <div class="button-group">
+                <button class="btn-save" type="submit">Simpan</button>
+                <button class="btn-cancel" type="button" @onclick="GoBack">Batal</button>
+            </div>
+        </EditForm>
+    }
+    else if (!isUserLoggedIn)
+    {
+        <WarningModal @ref="warningModal" />
+    }
+    else
+    {
+        <div class="error-message">
+            <p>Nomor Anggota tidak ditemukan.</p>
+        </div>
+        <button class="btn-home" @onclick="GoBack">Kembali</button>
+    }
+</div>
+
+<WarningModal @ref="warningModal" />
+
+<style>
+    .update-status-container {
+        max-width: 500px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #ffffff;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        border-radius: 8px;
+        text-align: center;
+    }
+
+    .title {
+        margin-bottom: 20px;
+        color: #333;
+    }
+
+    .form-container {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .form-group {
+        margin-bottom: 15px;
+    }
+
+    label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        text-align: left;
+    }
+
+    .input-field {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .button-group {
+        display: flex;
+        justify-content: space-between;
+        margin-top: 20px;
+    }
+
+    .btn-save {
+        background-color: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn-cancel {
+        background-color: #dc3545;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .error-message {
+        color: red;
+        font-weight: bold;
+    }
+
+    .btn-home {
+        background-color: #007bff;
+        color: white;
+        padding: 10px 15px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+</style>
+
+
+
+@code {
+    private Customer? member;
+    private WarningModal? warningModal;
+    private bool isUserLoggedIn = true;
+    private string description;
+    private string status;
+    private string memberid;
+    private DateTime date;
+    private List<LoanTransaction> loanTransactions = new();
+    private LoanTransaction selectedTransaction = new();
+    private LoanTransaction updatedTransaction = new();
+    private string selectedLoanID = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        var currentUser = await LocalStorage.GetItemAsStringAsync("currentUser");
+        if (string.IsNullOrEmpty(currentUser))
+        {
+            await ShowLoginWarning();
+            return;
+        }
+
+        // Ambil data Customer dari LocalStorage
+        var customerJson = await LocalStorage.GetItemAsStringAsync("currentCustomer");
+        if (!string.IsNullOrEmpty(customerJson))
+        {
+            member = JsonSerializer.Deserialize<Customer>(customerJson);
+        }
+
+        if (member == null) return;
+
+        date=DateTime.Now;
+
+        // Ambil semua LoanTransaction yang sesuai dengan MemberID
+        var allKeys = await LocalStorage.KeysAsync();
+        foreach (var key in allKeys)
+        {
+            if (key.StartsWith("2025"))
+            {
+                var loanJson = await LocalStorage.GetItemAsStringAsync(key);
+
+                if (!string.IsNullOrEmpty(loanJson))
+                {
+                    var loan = JsonSerializer.Deserialize<LoanTransaction>(loanJson);
+                    Console.WriteLine($"Raw JSON from LocalStorage: {loan}");
+
+                    // Simpan hanya transaksi yang sesuai dengan MemberID Customer
+                    if (member.MemberID == "")
+                    {
+                        if (loan?.MemberID == member.CitizenID)
+                        {
+                            loanTransactions.Add(loan);
+                            break;
+                        }
+                        else if (loan?.MemberID == member.MemberID)
+                        {
+                            loanTransactions.Add(loan);
+                            break;
+                        }
+                    }
+
+                }
+            }
+
+        }
+
+        Console.WriteLine($"Raw member JSON from LocalStorage: {member.CitizenID}");
+    }
+
+    private async Task ShowLoginWarning()
+    {
+        await Task.Delay(500);
+        warningModal?.Show("Anda belum login, silakan login terlebih dahulu.", "images/exclamation-mark.png");
+        await Task.Delay(500);
+        Navigation.NavigateTo("/");
+    }
+
+    private void OnLoanIDChange(ChangeEventArgs e)
+    {
+        selectedLoanID = e.Value.ToString();
+        var transaction = loanTransactions.FirstOrDefault(l => l.LoanID == selectedLoanID);
+
+        if (transaction != null)
+        {
+            selectedTransaction = new LoanTransaction
+                {
+                    LoanID = transaction.LoanID,
+                    MemberID = transaction.MemberID,
+                    LoanStatus = transaction.LoanStatus,
+                    LoanPurpose = transaction.LoanPurpose,
+                    LoanAmount = transaction.LoanAmount,
+                    LoanTenor = transaction.LoanTenor
+                };
+
+        }
+        else
+        {
+            selectedTransaction = new LoanTransaction();
+        }
+    }
+
+
+    private async Task SaveTransaction()
+    {
+        if (member == null || selectedTransaction == null) return;
+
+        // Pastikan TransactionHistories tidak null sebelum menambahkan transaksi baru
+        if (member.TransactionHistories == null)
+        {
+            member.TransactionHistories = new List<TransactionHistory>();
+        }
+
+        member.MemberID = memberid;    
+        // Tambahkan transaksi baru ke daftar TransactionHistories di Customer
+        member.TransactionHistories.Add(new TransactionHistory
+            {
+                DateTime = date,
+                Description = description
+            });
+
+        // Perbarui status LoanTransaction
+        updatedTransaction = new LoanTransaction
+            {
+                LoanID = selectedTransaction.LoanID,
+                MemberID = memberid,
+                LoanStatus = status,  // Pastikan status awal dimuat
+                LoanPurpose = selectedTransaction.LoanPurpose,
+                LoanAmount = selectedTransaction.LoanAmount,
+                LoanTenor = selectedTransaction.LoanTenor
+            };
+
+        Console.WriteLine($"Raw member JSON from LocalStorage: {selectedTransaction.LoanID}");
+        Console.WriteLine($"Raw member JSON from LocalStorage: {updatedTransaction.LoanID}");
+
+        // Simpan Customer yang telah diperbarui ke LocalStorage
+        await LocalStorage.SetItemAsync("currentCustomer", JsonSerializer.Serialize(member));
+
+        // Simpan LoanTransaction yang telah diperbarui ke LocalStorage
+        await LocalStorage.SetItemAsync(updatedTransaction.LoanID, JsonSerializer.Serialize(updatedTransaction));
+
+        Navigation.NavigateTo("/adminstatus");
+    }
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/adminstatus");
+    }
+}

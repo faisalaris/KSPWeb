@@ -7,6 +7,8 @@ namespace BaseLibrary.Entities
     {
         public int Id { get; set; }
 
+        public string MemberID { get; set; }
+
         [Required(ErrorMessage = "Nama wajib diisi.")]
         public string? Name { get; set; }
 

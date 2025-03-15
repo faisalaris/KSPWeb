@@ -18,7 +18,7 @@
 
 <!-- Tombol Pendaftaran dan Ajukan Pinjaman -->
 <div class="btn-group">
-    <button class="btn-action btn-pinjaman" @onclick="OpenLoanModal">Ajukan Pinjaman</button>
+    <button class="btn-action btn-pinjaman" @onclick="GoToRegister">Daftar dan Ajukan Pinjaman</button>
 </div>
 <p></p>
 <p>atau cek status pinjaman anda di sini dengan input nomor anggota atau KTP anda</p>
@@ -322,6 +322,7 @@
         }
         else
         {
+            var currentUser = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentUser");
             var customerJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", loanApplication.NomorIndukKTP);
             if (!string.IsNullOrEmpty(customerJson))
             {
@@ -332,8 +333,15 @@
                     // Simpan seluruh objek Customer ke LocalStorage agar bisa diambil di Status.razor
                     await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentCustomer", customerJson);
 
-                    // Navigasi ke Status.razor
-                    Navigation.NavigateTo("/status");
+                    // Cek apakah pengguna adalah admin
+                    if (currentUser == "admin")
+                    {
+                        Navigation.NavigateTo("/adminstatus"); // Jika admin, ke AdminStatus.razor
+                    }
+                    else
+                    {
+                        Navigation.NavigateTo("/status"); // Jika bukan, ke Status.razor
+                    }
                     return;
                 }
             }        
