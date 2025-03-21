@@ -6,35 +6,49 @@
 
 @inject NavigationManager Navigation
 @inject IJSRuntime JSRuntime 
+@inject Services.CustomerService CustomerService
 
 
-<PageTitle>Home</PageTitle>
+<PageTitle>KSP</PageTitle>
 
-<div class="banner"></div>
-<h1>Selamat Datang!!</h1>
+<div class="container text-center mt-5">
+    <h1 class="fw-bold">Selamat Datang!!</h1>
+    <p class="fs-5">Di Koperasi Syariah Pembangunan.</p>
+    <p class="text-muted">
+        Website ini memungkinkan Anda untuk mengajukan pinjaman dengan mudah serta
+        memantau status pinjaman Anda secara real-time di koperasi syariah. Dapatkan layanan
+        finansial yang transparan, aman, dan sesuai dengan prinsip syariah.
+    </p>
+    
+    <button class="btn btn-success btn-lg px-4 py-2 mt-3" @onclick="GoToRegister">
+        Daftar dan Ajukan Pinjaman
+    </button>
 
-<p>Di Koperasi Syariah Pembangunan.</p>
-<p>Ini adalah website untuk mengajukan atau mengecek pinjaman anda, mulai ajukan pinjaman ada disni</p>
+    <div class="mt-4">
+        <h5>Cek Status Pinjaman</h5>
+        <p class="text-muted">Masukkan nomor anggota atau NIK Anda untuk mengecek status pinjaman.</p>
+    </div>
 
-<!-- Tombol Pendaftaran dan Ajukan Pinjaman -->
-<div class="btn-group">
-    <button class="btn-action btn-pinjaman" @onclick="GoToRegister">Daftar dan Ajukan Pinjaman</button>
+    <div class="d-flex justify-content-center">
+        <div class="card shadow-sm p-4 mt-4" style="max-width: 500px; width: 100%;">
+            <h5 class="text-center mb-3">Cek Status Pinjaman</h5>
+
+            <div class="form-group">
+                <label class="fw-bold">Nomor Anggota:</label>
+                <InputText @bind-Value="loanApplication.NomorAnggota" class="form-control border rounded shadow-sm p-2 input-highlight" />
+            </div>
+
+            <div class="form-group mt-3">
+                <label class="fw-bold">Nomor Induk KTP:</label>
+                <InputText @bind-Value="loanApplication.NomorIndukKTP" class="form-control border rounded shadow-sm p-2 input-highlight" />
+            </div>
+
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-success px-4 py-2 fw-bold shadow" @onclick="GoToStatus">Periksa Status</button>
+            </div>
+        </div>
+    </div>
 </div>
-<p></p>
-<p>atau cek status pinjaman anda di sini dengan input nomor anggota atau KTP anda</p>
-<div class="form-group">
-    <label>Nomor Anggota:</label>
-    <InputText @bind-Value="loanApplication.NomorAnggota" class="form-control" />
-    <!--<validationmessage for="() => loanapplication.nomoranggota" class="text-danger" /> -->
-</div>
-
-<div class="form-group">
-    <label>Nomor Induk KTP:</label>
-    <InputText @bind-Value="loanApplication.NomorIndukKTP" class="form-control" />
-    <!--<ValidationMessage For="() => loanApplication.NomorIndukKTP" class="text-danger" />-->
-</div>
-<button type="submit" class="btn btn-submit-modal" @onclick="GoToStatus">Periksa Status</button>
-
 <!-- Modal Peringatan -->
 <WarningModal @ref="warningModal" @bind-Message="warningMessage" OnClose="RestoreLoanModal" />
 
@@ -253,6 +267,43 @@
         border-radius: 10px;
         box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
     }
+
+    .header-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center; /* Membuat semua elemen di tengah */
+        margin-top: 20px; /* Memberikan jarak dari atas */
+    }
+
+    .logo-container {
+        text-align: center;
+        margin-bottom: 30px; /* Memberikan jarak antara logo dan teks */
+    }
+
+    .logo {
+        width: 140px; /* Ukuran logo */
+        height: auto;
+    }
+
+    .welcome-text {
+        font-size: 2rem;
+        font-weight: bold;
+        text-align: center;
+        margin-top: 10px; /* Jarak antara logo dan teks */
+    }
+
+    .description {
+        text-align: center;
+        font-size: 1.2rem;
+    }
+
+    .input-highlight:focus,
+    .input-highlight:valid {
+        border-color: #28a745 !important; /* Warna hijau */
+        box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
+        transition: 0.3s ease-in-out;
+    }
+
 </style>
 
 @code {
@@ -323,13 +374,16 @@
         else
         {
             var currentUser = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentUser");
-            var customerJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", loanApplication.NomorIndukKTP);
-            if (!string.IsNullOrEmpty(customerJson))
-            {
-                var customer = JsonSerializer.Deserialize<Customer>(customerJson);
+            //var customerJson = await JSRuntime.InvokeAsync<string>("localStorage.getItem", loanApplication.NomorIndukKTP);
+            var customer = await CustomerService.GetCustomerDataAsync(loanApplication.NomorIndukKTP, loanApplication.NomorAnggota);
+
 
                 if (customer != null)
                 {
+                    var customerJson = JsonSerializer.Serialize(customer, new JsonSerializerOptions
+                    {
+                        WriteIndented = true // Biar JSON lebih rapi
+                    });
                     // Simpan seluruh objek Customer ke LocalStorage agar bisa diambil di Status.razor
                     await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentCustomer", customerJson);
 
@@ -343,8 +397,7 @@
                         Navigation.NavigateTo("/status"); // Jika bukan, ke Status.razor
                     }
                     return;
-                }
-            }        
+                }    
         }
         statusModal?.Show("Nomor Anggota atau NIK tidak ditemukan.");
     }

@@ -175,6 +175,9 @@ else
         await LocalStorage.SetItemAsync(loanTransaction.LoanID, loanTransaction);
 
         statusModal?.Show("Pengajuan pinjaman berhasil dikirim!", "images/circle.png");
+
+        await Task.Delay(800);
+        Navigation.NavigateTo("/");
         // Simpan transaksi ke local storage untuk sementara
         
     }

@@ -10,5 +10,7 @@ namespace BaseLibrary.Entities
     {
         public DateTime DateTime { get; set; }
         public string? Description { get; set; }
+        public string ? Status { get; set; }
+        public string? Waktu { get; set; }
     }
 }

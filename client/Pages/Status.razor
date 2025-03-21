@@ -20,8 +20,9 @@
             </span>
         </div>
         <div class="card-body">
-            <p><strong>No Anggota:</strong> @member.CitizenID</p>
+            <p><strong>No Anggota:</strong> @member.MemberID</p>
             <p><strong>NIK:</strong> @member.CitizenID</p>
+            <p><strong>Nama:</strong> @member.Name</p>
             <p><strong>No. Telp:</strong> @member.MobilePhone</p>
             <p><strong>Email:</strong> @member.Email</p>
         </div>
@@ -35,8 +36,9 @@
             @foreach (var transaksi in member.TransactionHistories)
             {
                 <li>
-                    <strong>Waktu:</strong> @transaksi.DateTime.ToString("dd/MM/yyyy HH:mm") <br />
-                    <strong>Deskripsi:</strong> @transaksi.Description
+                    <strong>Waktu:</strong> @transaksi.Waktu<br />
+                    <strong>Deskripsi:</strong> @transaksi.Description <br />
+                    <strong>Status:</strong> @transaksi.Status
                 </li>
             }
         </ul>
@@ -140,12 +142,15 @@ else
         if (!string.IsNullOrEmpty(customerJson))
         {
             member = JsonSerializer.Deserialize<Customer>(customerJson);
+
+            await LocalStorage.RemoveItemAsync("currentCustomer");
         }
 
         if (member == null)
         {
             warningModal?.Show("Nomor anggota tidak ditemukan!");
         }
+
     }
 
     private void GoBack()

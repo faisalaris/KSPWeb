@@ -1,0 +1,179 @@
+﻿@page "/Dataxxxxxxxx123/"
+
+@using System.Text;
+@using BaseLibrary.Entities
+
+@inject Services.CustomerService CustomerService
+@inject HttpClient Http
+@code {
+    private List<Customer> listcustomers = new();
+    private Customer customer = new();
+    private string responseText2;
+
+    protected override async Task OnInitializedAsync()
+    {
+        customer = await CustomerService.GetCustomerDataAsync("1203129182", "A781921");
+        string json = await CustomerService.GetCustomerDataAsJsonAsync("1234567890", "A781921");
+
+        Console.WriteLine(json);
+    }
+
+    private List<ApiResponse> responseData = new();
+
+    private async Task SendRequestAsync()
+    {
+        try
+        {
+            var url = "";
+            var postData = new
+            {
+                SP = "exec spw_view_submission '1203129182','A781921'",
+                ParamSP = new { }
+            };
+
+            var request = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(postData), Encoding.UTF8, "application/json")
+                };
+
+            // Menambahkan header
+
+            var response = await Http.SendAsync(request);
+            var responseString = await response.Content.ReadAsStringAsync();
+            responseText2 = await response.Content.ReadAsStringAsync();
+            Console.WriteLine(responseText2);
+
+            // Deserialize JSON ke List<ApiResponse>
+            responseData = System.Text.Json.JsonSerializer.Deserialize<List<ApiResponse>>(responseString, new System.Text.Json.JsonSerializerOptions
+                {
+                    PropertyNameCaseInsensitive = true
+                });
+           
+        }
+        catch (Exception ex)
+        {
+            responseData = new();
+        }
+    }
+}
+
+<div class="card p-4 shadow-sm mt-4">
+    <h5 class="text-center">Cek Status</h5>
+    <button @onclick="SendRequestAsync" class="btn btn-success fw-bold mt-3">Kirim Permintaan</button>
+
+    @if (responseData.Count > 0)
+    {
+        <table class="table table-bordered mt-3">
+            <thead>
+                <tr>
+                    <th>Group No</th>
+                    <th>Group Name</th>
+                    <th>Line No</th>
+                    <th>Caption</th>
+                    <th>Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in responseData)
+                {
+                    <tr>
+                        <td>@item.GroupNo</td>
+                        <td>@item.GroupName</td>
+                        <td>@item.LineNo</td>
+                        <td>@item.Caption</td>
+                        <td>@item.Value</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+    else
+    {
+        <p class="text-danger mt-3">Gagal mendapatkan data atau data kosong.</p>
+    }
+
+</div>
+
+<h3 class="text-center mt-3">Cek Status Anggota</h3>
+
+@if (listcustomers.Any())
+{
+    @foreach (var customer in listcustomers)
+    {
+        <div class="card shadow-sm p-4 mt-3 mx-auto" style="max-width: 400px;">
+            <div class="mb-3">
+                <strong>No Anggota:</strong> @customer.MemberID
+            </div>
+            <div class="mb-3">
+                <strong>Nama:</strong> @customer.Name
+            </div>
+            <div class="mb-3">
+                <strong>Email:</strong> @customer.Email
+            </div>
+            <div class="mb-3">
+                <strong>No HP:</strong> @customer.MobilePhone
+            </div>
+            <div class="mb-3">
+                <strong>Status:</strong>
+                <span class="badge @(customer.Status == "Active" ? "bg-success" : "bg-danger")">
+                    @customer.Status
+                </span>
+            </div>
+        </div>
+    }
+}
+else if (customer != null)
+{
+    <div class="card shadow-sm p-4 mt-3 mx-auto" style="max-width: 400px;">
+        <div class="mb-3">
+            <strong>No Anggota:</strong> @customer.MemberID
+        </div>
+        <div class="mb-3">
+            <strong>Nama:</strong> @customer.Name
+        </div>
+        <div class="mb-3">
+            <strong>Email:</strong> @customer.Email
+        </div>
+        <div class="mb-3">
+            <strong>No HP:</strong> @customer.MobilePhone
+        </div>
+        <div class="mb-3">
+            <strong>Status:</strong>
+            <span class="badge @(customer.Status == "Active" ? "bg-success" : "bg-danger")">
+                @customer.Status
+            </span>
+        </div>
+    </div>
+
+    @if (customer.TransactionHistories.Count == 0)
+    {
+        <p>Tidak ada riwayat transaksi.</p>
+    }
+    else
+    {
+        <table class="table table-bordered">
+            <thead>
+                <tr>
+                    <th>Waktu</th>
+                    <th>Keterangan</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var transaction in customer.TransactionHistories)
+                {
+                    <tr>
+                        <td>@transaction.Waktu</td>
+                        <td>@transaction.Description</td>
+                        <td>@transaction.Status</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+}
+else
+{
+    <p class="text-center text-danger">Data tidak ditemukan.</p>
+}
+

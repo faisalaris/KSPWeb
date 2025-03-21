@@ -15,11 +15,11 @@
             @if (isLoggedIn)
             {
                 <span class="welcome-text">Selamat datang, Admin</span>
-                <img src="images/forbidden.png" class="icon-img" @onclick="ShowLogoutModal" alt="Logout" />
+                <img src="images/logout.png" class="icon-img" @onclick="ShowLogoutModal" title="Klik untuk logout" alt="Logout" />
             }
             else
             {
-                <img src="images/user.png" class="icon-img" @onclick="GoToLogin" alt="Login" />
+                <img src="images/user.png" class="icon-img" @onclick="GoToLogin" title="Klik untuk login" alt="Login" />
             }
         </div>
 

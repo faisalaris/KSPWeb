@@ -14,7 +14,11 @@
 
     <div class="form-group">
         <label>Upload Gambar KTP:</label>
-        <InputFile OnChange="HandleFileUpload" class="form-control" />
+        <div class="file-upload">
+            <label for="fileInput" class="file-upload-label">Pilih File</label>
+            <InputFile id="fileInput" OnChange="HandleFileUpload" class="file-input" />
+            <input type="text" class="file-name-display" @bind="uploadedFileName" readonly />
+        </div>
     </div>
 
     <div class="form-group">
@@ -66,6 +70,7 @@
 
     <div class="button-container">
         <button type="submit" class="btn btn-submit">Daftar</button>
+        <button class="btn btn-submit" type="button" @onclick="GoBack">Batal</button>
     </div>
 </EditForm>
 
@@ -140,11 +145,54 @@
             transform: scale(1.05);
             box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
         }
+
+    .file-upload {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .file-upload-label {
+        display: inline-block;
+        background-color: #4CAF50;
+        color: white;
+        padding: 10px 12px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        transition: background-color 0.3s;
+    }
+
+        .file-upload-label:hover {
+            background-color: #45a049;
+        }
+
+    .file-input {
+        display: none;
+    }
+
+    .file-name-display {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        font-size: 14px;
+        background-color: #f9f9f9;
+    }
 </style>
 
 @code {
     private Customer user = new();
     private WarningModal? warningModal;
+    private string uploadedFileName = "Belum ada file dipilih";
+
+    private void GoBack()
+    {
+        Navigation.NavigateTo("/");
+    }
+
+
     private async Task HandleValidSubmit()
     {
         // Set Status ke Active
@@ -177,11 +225,13 @@
         warningModal.Show("Harap isi semua bidang yang diperlukan!", "images/exclamation-mark.png");
     }
 
+
     private async void HandleFileUpload(InputFileChangeEventArgs e)
     {
         var file = e.File;
         if (file != null)
         {
+            uploadedFileName = file.Name;
             using var stream = file.OpenReadStream();
             using var ms = new MemoryStream();
             await stream.CopyToAsync(ms);
