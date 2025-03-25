@@ -20,9 +20,9 @@
         finansial yang transparan, aman, dan sesuai dengan prinsip syariah.
     </p>
     
-    <button class="btn btn-success btn-lg px-4 py-2 mt-3" @onclick="GoToRegister">
-        Daftar dan Ajukan Pinjaman
-    </button>
+    <!--- <button class="btn btn-success btn-lg px-4 py-2 mt-3" @onclick="GoToRegister">
+        Daftar dan Ajukan Pinjaman 
+    </button> -->
 
     <div class="mt-4">
         <h5>Cek Status Pinjaman</h5>
@@ -44,7 +44,7 @@
             </div>
 
             <div class="text-center mt-4">
-                <button type="submit" class="btn btn-success px-4 py-2 fw-bold shadow" @onclick="GoToStatus">Periksa Status</button>
+                <button type="submit" class="btn btn-submit px-4 py-2 fw-bold shadow" @onclick="GoToStatus">Periksa Status</button>
             </div>
         </div>
     </div>
@@ -117,22 +117,22 @@
     }
 
     .btn-daftar {
-        background: linear-gradient(90deg, #28a745, #218838);
+        background: linear-gradient(90deg, #037803, #218838);
         color: white;
     }
 
         .btn-daftar:hover {
-            background: linear-gradient(90deg, #218838, #1e7e34);
+            background: linear-gradient(90deg, #FEBD0F, #F9DD7A);
             transform: scale(1.05);
         }
 
     .btn-pinjaman {
-        background: linear-gradient(90deg, #28a745, #218838);
+        background: linear-gradient(90deg, #037803, #218838);
         color: white;
     }
 
         .btn-pinjaman:hover {
-            background: linear-gradient(90deg, #218838, #1e7e34);
+            background: linear-gradient(90deg, #FEBD0F, #F9DD7A);
             transform: scale(1.05);
         }
 
@@ -223,7 +223,7 @@
         font-size: 14px;
         font-weight: bold;
         color: white;
-        background: linear-gradient(90deg, #28a745, #218838);
+        background: linear-gradient(90deg, #037803, #218838);
         border: none;
         border-radius: 30px;
         cursor: pointer;
@@ -233,7 +233,7 @@
     }
 
         .btn-submit-modal:hover {
-            background: linear-gradient(90deg, #218838, #1e7e34);
+            background: linear-gradient(90deg, #FEBD0F, #F9DD7A);
             transform: scale(1.05);
             box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
         }
@@ -244,7 +244,7 @@
         font-size: 18px;
         font-weight: bold;
         color: white;
-        background: linear-gradient(90deg, #28a745, #218838);
+        background: linear-gradient(90deg, #037803, #218838);
         border: none;
         border-radius: 30px;
         cursor: pointer;
@@ -253,7 +253,7 @@
     }
 
         .btn-submit:hover {
-            background: linear-gradient(90deg, #218838, #1e7e34);
+            background: linear-gradient(90deg, #FEBD0F, #F9DD7A);
             transform: scale(1.05);
             box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
         }
@@ -299,7 +299,7 @@
 
     .input-highlight:focus,
     .input-highlight:valid {
-        border-color: #28a745 !important; /* Warna hijau */
+        border-color: #037803 !important; /* Warna hijau */
         box-shadow: 0 0 8px rgba(40, 167, 69, 0.5);
         transition: 0.3s ease-in-out;
     }
@@ -378,7 +378,12 @@
             var customer = await CustomerService.GetCustomerDataAsync(loanApplication.NomorIndukKTP, loanApplication.NomorAnggota);
 
 
-                if (customer != null)
+                if (customer.CitizenID == null || customer.MemberID == null)
+                {
+                    CloseLoanModal();
+                    statusModal?.Show("Nomor Anggota atau NIK tidak ditemukan.");
+                }
+                else
                 {
                     var customerJson = JsonSerializer.Serialize(customer, new JsonSerializerOptions
                     {
@@ -399,7 +404,7 @@
                     return;
                 }    
         }
-        statusModal?.Show("Nomor Anggota atau NIK tidak ditemukan.");
+        
     }
     private async Task GoToRegisterLoan()
     {

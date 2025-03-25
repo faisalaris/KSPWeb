@@ -3,7 +3,7 @@
         <img src="@ImageSrc" alt="Warning" class="warning-icon" />
         <h3>Peringatan</h3>
         <p>@Message</p>
-        <button class="btn-close" @onclick="CloseModal">OK</button>
+        <button class="btn btn-submit px-4 py-2 fw-bold shadow" @onclick="CloseModal">OK</button>
     </div>
 </div>
 
@@ -37,21 +37,24 @@
         height: 70px;
     }
 
-    .btn-close {
-        padding: 10px 40px;
-        border: none;
-        background: linear-gradient(90deg, #28a745, #218838);
-        color: white;
-        border-radius: 25px;
-        cursor: pointer;
-        font-size: 14px;
+    .btn-submit {
+        width: 100%;
+        padding: 12px;
+        font-size: 18px;
         font-weight: bold;
+        color: white;
+        background: linear-gradient(90deg, #037803, #218838);
+        border: none;
+        border-radius: 30px;
+        cursor: pointer;
         transition: all 0.3s ease-in-out;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.2);
     }
 
-        .btn-close:hover {
-            background: linear-gradient(90deg, #218838, #1e7e34);
+        .btn-submit:hover {
+            background: linear-gradient(90deg, #FEBD0F, #F9DD7A);
             transform: scale(1.05);
+            box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
         }
 </style>
 
@@ -67,7 +70,7 @@
     {
         Message = message;
         MessageChanged.InvokeAsync(message);
-        ImageSrc = imageSrc ?? "images/not-found.png"; // Jika tidak diisi, pakai default
+        ImageSrc = imageSrc ?? "images/exclamation-mark.png"; // Jika tidak diisi, pakai default
         IsOpen = true;
         StateHasChanged();
     }
