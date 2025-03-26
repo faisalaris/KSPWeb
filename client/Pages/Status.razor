@@ -15,7 +15,7 @@
     <div class="card">
         <div class="card-header">
             <strong>Status Anggota:</strong>
-            <span class="@(member.Status == "Active" ? "status-active" : "status-inactive")">
+            <span class="@(member.Status == "Aktif" || member.Status ==  "1" ? "status-active" : "status-inactive")">
                 @(member.Status)
             </span>
         </div>
