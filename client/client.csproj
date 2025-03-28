@@ -7,6 +7,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <_ContentIncludedByDefault Remove="wwwroot\images\backgroundlayout.png" />
     <_ContentIncludedByDefault Remove="wwwroot\images\exclamation-mark.png" />
     <_ContentIncludedByDefault Remove="wwwroot\images\logout.png" />
   </ItemGroup>

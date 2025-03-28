@@ -382,8 +382,15 @@
         if (string.IsNullOrEmpty(loanApplication.NomorAnggota) && string.IsNullOrEmpty(loanApplication.NomorIndukKTP))
         {
             CloseLoanModal();
-            statusModal?.Show("Nomor Anggota atau NIK tidak boleh kosong!");
+            statusModal?.Show("Nomor Anggota Dan NIK tidak boleh kosong!");
         }
+        else if (string.IsNullOrEmpty(loanApplication.NomorAnggota) || string.IsNullOrEmpty(loanApplication.NomorIndukKTP))
+        { 
+
+            CloseLoanModal();
+            statusModal?.Show("Nomor Anggota Dan NIK tidak boleh kosong!");
+        }
+
         else
         {
             var currentUser = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentUser");
@@ -392,6 +399,13 @@
             if (customer.CitizenID == null || customer.MemberID == null)
             {
                 CloseLoanModal();
+
+                isLoading = true;
+                await InvokeAsync(StateHasChanged);
+                await Task.Delay(2000);
+                isLoading = false;
+                await InvokeAsync(StateHasChanged);
+
                 statusModal?.Show("Nomor Anggota atau NIK tidak ditemukan.");
             }
             else

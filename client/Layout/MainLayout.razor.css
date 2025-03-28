@@ -2,14 +2,39 @@
     position: relative;
     display: flex;
     flex-direction: column;
+    background: url('/images/backgroundlayout.png') no-repeat center center fixed;
+    background-size: cover;
 }
+
+    .page::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(255, 255, 255, 0.7); /* Transparansi 30% */
+        z-index: 0;
+    }
+
+    .page > * {
+        position: relative;
+        z-index: 1;
+    }
+
 
 main {
     flex: 1;
 }
 
 .sidebar {
-    background-image: linear-gradient(180deg, rgb(5, 39, 103) 0%, #3a0647 70%);
+    background: url('/images/sidebar.png') no-repeat center center fixed;
+    background-size: contain; /* Agar gambar tidak terpotong */
+    height: 100vh; /* Sidebar setinggi layar */
+    width: 100%; /* Lebar menyesuaikan */
+    display: flex;
+    align-items: center; /* Pusatkan konten */
+    justify-content: center; /* Pusatkan konten */
 }
 
 .top-row {
