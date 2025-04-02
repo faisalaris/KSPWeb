@@ -395,6 +395,7 @@
         {
             var currentUser = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentUser");
             var customer = await CustomerService.GetCustomerDataAsync(loanApplication.NomorIndukKTP, loanApplication.NomorAnggota);
+            var jsoncust = await CustomerService.GetApiDataAsJsonAsync(loanApplication.NomorIndukKTP, loanApplication.NomorAnggota);
 
             if (customer.CitizenID == null || customer.MemberID == null)
             {
@@ -418,6 +419,7 @@
                         WriteIndented = true
                     });
                 await JSRuntime.InvokeVoidAsync("localStorage.setItem", "currentCustomer", customerJson);
+                await JSRuntime.InvokeVoidAsync("localStorage.setItem", "ApiCustomer", jsoncust);
 
                 await Task.Delay(2000); // Simulasi loading selama 2 detik
 

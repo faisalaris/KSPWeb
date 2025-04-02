@@ -107,8 +107,9 @@ namespace client.Services
                 // Menambahkan header
 
                 var response = await _httpClient.SendAsync(request);
- 
                 var jsonResponse = await response.Content.ReadAsStringAsync();
+                Console.WriteLine(jsonResponse);
+
                 var dataList = JsonSerializer.Deserialize<List<ApiResponse>>(jsonResponse, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
                 if (dataList == null) return null;
@@ -191,6 +192,34 @@ namespace client.Services
             });
 
             return json;
+        }
+
+        public async Task<string> GetApiDataAsJsonAsync(string citizenId, string memberId)
+        {
+            try
+            {
+                var url = "";
+                var postData = new
+                {
+                    SP = $"exec spw_view_submission '{citizenId}','{memberId}'",
+                    ParamSP = new { }
+                };
+
+                var request = new HttpRequestMessage(HttpMethod.Post, url)
+                {
+                    Content = new StringContent(System.Text.Json.JsonSerializer.Serialize(postData), Encoding.UTF8, "application/json")
+                };
+
+                // Menambahkan header
+
+                var response = await _httpClient.SendAsync(request);
+                var jsonResponse = await response.Content.ReadAsStringAsync();
+                return jsonResponse;
+            }
+            catch
+            {
+                return null;
+            }
         }
     }
 }

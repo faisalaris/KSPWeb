@@ -15,37 +15,43 @@
     <div class="card">
         <div class="card-header">
             <strong>Status Anggota:</strong>
-            <span class="@(member.Status == "Aktif" || member.Status ==  "1" ? "status-active" : "status-inactive")">
-                @(member.Status)
+            <span class="@(customerData.FirstOrDefault(d => d["caption"] == "Status")?["value"] == "Aktif" ? "status-active" : "status-inactive")">
+                @(customerData.FirstOrDefault(d => d["caption"] == "Status")?["value"])
             </span>
         </div>
         <div class="card-body">
-            <p><strong>No Anggota:</strong> @member.MemberID</p>
-            <p><strong>NIK:</strong> @member.CitizenID</p>
-            <p><strong>Nama:</strong> @member.Name</p>
-            <p><strong>No. Telp:</strong> @member.MobilePhone</p>
-            <p><strong>Email:</strong> @member.Email</p>
+            @foreach (var item in customerData.Where(i => i["caption"] != "Status"))
+            {
+                <p><strong>@item["caption"]:</strong> @item["value"]</p>
+            }
         </div>
     </div>
 
     <h4>Riwayat Transaksi:</h4>
-    @if (member.TransactionHistories != null && member.TransactionHistories.Any())
+    @if (transactionData.Any())
     {
-        <ul class="transaction-list">
+        var groupedTransactions = transactionData
+            .GroupBy(t => t["lineno"])
+            .OrderBy(g => g.Key);
 
-            @foreach (var transaksi in member.TransactionHistories)
+        <ul class="transaction-list">
+            @foreach (var group in groupedTransactions)
             {
                 <li>
-                    <strong>Waktu:</strong> @transaksi.Waktu<br />
-                    <strong>Deskripsi:</strong> @transaksi.Description <br />
-                    <strong>Status:</strong> @transaksi.Status
+                    <strong>Transaksi Pinjaman No @group.FirstOrDefault(i => i["caption"] == "Nomor Pinjaman")?["value"]:</strong>
+
+                    @foreach (var transaksi in group.Where(i => i["caption"] != "Nomor Pinjaman"))
+                        {
+                            <li><strong>@transaksi["caption"]:</strong> @transaksi["value"]</li>
+                        }
+
                 </li>
             }
         </ul>
     }
     else
     {
-        <li>Tidak ada transaksi.</li>
+        <p>Tidak ada transaksi.</p>
     }
 
     <button class="btn-home" @onclick="GoBack">Kembali</button>
@@ -132,24 +138,42 @@ else
 </style>
 
 @code {
+    private List<Dictionary<string, string>> customerData = new();
+    private List<Dictionary<string, string>> transactionData = new();
     private Customer? member;
     private WarningModal? warningModal;
 
     protected override async Task OnInitializedAsync()
     {
         var customerJson = await LocalStorage.GetItemAsStringAsync("currentCustomer");
+        var apiJson = await LocalStorage.GetItemAsStringAsync("ApiCustomer");
+
+        if (!string.IsNullOrEmpty(apiJson))
+        {
+
+
+
+            var data = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(apiJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+            if (data != null)
+            {
+                customerData = data.Where(d => d["groupname"] == "Customer").ToList();
+                transactionData = data.Where(d => d["groupname"] == "Transaction").ToList();
+            }
+         
+
+        }
+        
+  
 
         if (!string.IsNullOrEmpty(customerJson))
         {
             member = JsonSerializer.Deserialize<Customer>(customerJson);
 
             await LocalStorage.RemoveItemAsync("currentCustomer");
+            await LocalStorage.RemoveItemAsync("ApiCustomer");
         }
 
-        if (member == null)
-        {
-            warningModal?.Show("Nomor anggota tidak ditemukan!");
-        }
 
     }
 
