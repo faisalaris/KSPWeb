@@ -74,8 +74,6 @@
             <button class="close-btn" @onclick="CloseLoanModal">&times;</button>
             <h3 class="form-title">Ajukan Pinjaman</h3>
 
-
-
                 <div class="form-group">
                     <label>Nomor Anggota:</label>
                     <InputText @bind-Value="loanApplication.NomorAnggota" class="form-control" />
@@ -92,9 +90,7 @@
                 </div>
 
                 <p>Belum jadi Anggota? Daftarkan diri anda segera ajukan Pinjaman</p>
-                <button class="btn-action btn-daftar" @onclick="GoToRegister">Pendaftaran</button>
-
-                
+                <button class="btn-action btn-daftar" @onclick="GoToRegister">Pendaftaran</button>                
         </div>
     </div>
 }
@@ -270,7 +266,6 @@
             box-shadow: 0px 6px 12px rgba(0, 0, 0, 0.25);
         }
 
-
     .status-modal {
         width: 100%;
         max-width: 450px;
@@ -337,7 +332,6 @@
         }
     }
 
-
     private void OpenLoanModal()
     {
         isLoanModalOpen = true;
@@ -371,7 +365,6 @@
         Console.WriteLine("Memeriksa status pinjaman...");
     }
 
-
     private void GoToRegister()
     {
         Navigation.NavigateTo("/register");
@@ -390,7 +383,6 @@
             CloseLoanModal();
             statusModal?.Show("Nomor Anggota Dan NIK tidak boleh kosong!");
         }
-
         else
         {
             var currentUser = await JSRuntime.InvokeAsync<string>("localStorage.getItem", "currentUser");

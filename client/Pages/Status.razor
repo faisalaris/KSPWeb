@@ -37,14 +37,21 @@
         <ul class="transaction-list">
             @foreach (var group in groupedTransactions)
             {
-                <li>
-                    <strong>Transaksi Pinjaman No @group.FirstOrDefault(i => i["caption"] == "Nomor Pinjaman")?["value"]:</strong>
+                <li class="first-item">
+                    <strong>Transaksi Pinjaman No @group.FirstOrDefault(i => i["caption"] == "Nomor Pinjaman")?["value"]:</strong> <br/>
 
+                 <div class="transaction-grid">
                     @foreach (var transaksi in group.Where(i => i["caption"] != "Nomor Pinjaman"))
                         {
-                            <li><strong>@transaksi["caption"]:</strong> @transaksi["value"]</li>
-                        }
+                       <li class="second-item"> 
+                           <span>
+                               <strong>@transaksi["caption"]:</strong>
 
+                           </span> <br /> 
+                            <span> @transaksi["value"] </span> <br /> 
+                       </li>
+                        }
+                </div>
                 </li>
             }
         </ul>
@@ -100,13 +107,30 @@ else
         padding: 0;
     }
 
-        .transaction-list li {
-            background: #f9f9f9;
-            padding: 8px;
-            margin-bottom: 5px;
-            border-radius: 5px;
-            border-left: 6px solid #037803;
-        }
+    /* Item utama (judul transaksi) tetap hijau */
+    .first-item {
+        border-left: 6px solid #037803; /* Hijau */
+        background: white;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
+    }
+
+    /* Grid untuk membagi detail transaksi dalam dua kolom */
+    .transaction-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr; /* 2 kolom dengan lebar sama */
+        gap: 10px; /* Jarak antar elemen */
+    }
+
+    /* Item transaksi tetap kuning */
+    .second-item {
+        border-left: 6px solid #FEBD0F; /* Kuning */
+        background: #f9f9f9;
+        padding: 8px;
+        border-radius: 5px;
+    }
 
     .error-message {
         color: red;
@@ -150,9 +174,6 @@ else
 
         if (!string.IsNullOrEmpty(apiJson))
         {
-
-
-
             var data = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(apiJson, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
 
             if (data != null)
@@ -161,11 +182,8 @@ else
                 transactionData = data.Where(d => d["groupname"] == "Transaction").ToList();
             }
          
-
         }
         
-  
-
         if (!string.IsNullOrEmpty(customerJson))
         {
             member = JsonSerializer.Deserialize<Customer>(customerJson);
@@ -173,8 +191,6 @@ else
             await LocalStorage.RemoveItemAsync("currentCustomer");
             await LocalStorage.RemoveItemAsync("ApiCustomer");
         }
-
-
     }
 
     private void GoBack()

@@ -15,12 +15,29 @@
     /* Sidebar dengan border kanan dan shadow */
     .nav-container {
         background: url('/images/NavKSP4.jpg') no-repeat center center;
-        background-size: cover; /* Agar gambar memenuhi area */
-        height: 100vh; /* Menggunakan tinggi layar penuh */
-        width: 255px; /* Lebar sidebar tetap */
+        background-size: cover;
+        height: 100vh; /* Tinggi tetap layar penuh */
+        width: 255px; /* Lebar sidebar default */
         padding-top: 10px;
-        border-right: none;
+        transition: all 0.3s ease-in-out;
     }
+
+        /* ✅ RESPONSIVE UNTUK LAYAR KECIL (SMARTPHONE) */
+    @@media (max-width: 768px) {
+    .nav-container {
+        width: 100px; /* Mengecilkan sidebar di layar kecil */
+        background-size: contain; /* Menyesuaikan gambar */
+        height: 100%; /* Pastikan gambar tidak terpotong */
+    }
+}
+
+    @@media (max-width: 480px) {
+    .nav-container {
+        width: 80px; /* Lebih kecil lagi untuk layar sangat kecil */
+        background-size: contain;
+        height: 100%;
+    }
+}
 
     .nav-scrollable {
         overflow-y: auto;
