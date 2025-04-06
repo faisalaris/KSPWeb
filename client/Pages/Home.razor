@@ -26,12 +26,12 @@
 
     <div class="mt-4">
         <h5>Cek Status Pinjaman</h5>
-        <p class="text-muted">Masukkan nomor anggota atau NIK Anda untuk mengecek status pinjaman.</p>
+        <p class="text-muted">Masukkan nomor anggota koperasi dan nomor KTP Anda untuk melihat status pinjaman.</p>
     </div>
 
     <div class="d-flex justify-content-center">
         <div class="card shadow-sm p-4 mt-4" style="max-width: 500px; width: 100%;">
-            <h5 class="text-center mb-3">Cek Status Pinjaman</h5>
+            <h5 class="text-center mb-3">Lihat Status Pinjaman</h5>
 
             <div class="form-group">
                 <label class="fw-bold">Nomor Anggota:</label>
@@ -321,6 +321,9 @@
     private string? storedNomorAnggota;
     private string? storedNomorIndukKTP;
     private bool isLoading = false;
+    private List<Dictionary<string, string>> customerData = new();
+    string noAnggota = string.Empty;
+    string nomorKTP = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -389,7 +392,20 @@
             var customer = await CustomerService.GetCustomerDataAsync(loanApplication.NomorIndukKTP, loanApplication.NomorAnggota);
             var jsoncust = await CustomerService.GetApiDataAsJsonAsync(loanApplication.NomorIndukKTP, loanApplication.NomorAnggota);
 
-            if (customer.CitizenID == null || customer.MemberID == null)
+            if (!string.IsNullOrEmpty(jsoncust))
+            {
+                var data = JsonSerializer.Deserialize<List<Dictionary<string, string>>>(jsoncust, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
+
+                if (data != null)
+                {
+                    customerData = data.Where(d => d.ContainsKey("groupno") && int.TryParse(d["groupno"], out int groupNo) && groupNo == 1).ToList();
+                }
+            }
+
+            noAnggota = customerData.FirstOrDefault(item => item.ContainsKey("caption") && item["caption"] == "No Anggota")?["value"];
+            nomorKTP = customerData.FirstOrDefault(item => item.ContainsKey("caption") && item["caption"] == "Nomor KTP")?["value"];
+
+            if (string.IsNullOrEmpty(noAnggota) || string.IsNullOrEmpty(nomorKTP))
             {
                 CloseLoanModal();
 

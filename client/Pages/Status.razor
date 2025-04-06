@@ -31,27 +31,24 @@
     @if (transactionData.Any())
     {
         var groupedTransactions = transactionData
-            .GroupBy(t => t["lineno"])
+            .Where(t => t.ContainsKey("groupname"))
+            .GroupBy(t => t["groupname"])
             .OrderBy(g => g.Key);
 
         <ul class="transaction-list">
             @foreach (var group in groupedTransactions)
             {
                 <li class="first-item">
-                    <strong>Transaksi Pinjaman No @group.FirstOrDefault(i => i["caption"] == "Nomor Pinjaman")?["value"]:</strong> <br/>
-
-                 <div class="transaction-grid">
-                    @foreach (var transaksi in group.Where(i => i["caption"] != "Nomor Pinjaman"))
+                    <strong>@group.Key</strong><br />
+                    <div class="transaction-grid">
+                        @foreach (var transaksi in group)
                         {
-                       <li class="second-item"> 
-                           <span>
-                               <strong>@transaksi["caption"]:</strong>
-
-                           </span> <br /> 
-                            <span> @transaksi["value"] </span> <br /> 
-                       </li>
+                            <div class="second-item">
+                                <span><strong>@transaksi["caption"]</strong></span><br />
+                                <span>@transaksi["value"]</span><br />
+                            </div>
                         }
-                </div>
+                    </div>
                 </li>
             }
         </ul>
@@ -178,16 +175,14 @@ else
 
             if (data != null)
             {
-                customerData = data.Where(d => d["groupname"] == "Customer").ToList();
-                transactionData = data.Where(d => d["groupname"] == "Transaction").ToList();
-            }
-         
+                customerData = data.Where(d => d.ContainsKey("groupno") && int.TryParse(d["groupno"], out int groupNo) && groupNo == 1).ToList();
+                transactionData = data.Where(d => d.ContainsKey("groupno") && int.TryParse(d["groupno"], out int groupNo) && groupNo > 1).ToList();
+            }       
         }
         
         if (!string.IsNullOrEmpty(customerJson))
         {
             member = JsonSerializer.Deserialize<Customer>(customerJson);
-
             await LocalStorage.RemoveItemAsync("currentCustomer");
             await LocalStorage.RemoveItemAsync("ApiCustomer");
         }
