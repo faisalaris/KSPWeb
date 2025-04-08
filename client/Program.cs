@@ -12,7 +12,8 @@ builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri(builder.
 builder.Services.AddBlazoredLocalStorage(); // Tambahkan ini untuk mengaktifkan LocalStorage
 builder.Services.AddScoped(sp =>
 {
-    var client = new HttpClient { BaseAddress = new Uri("http://103.130.164.28:1242/api/main/") };
+    //var client = new HttpClient { BaseAddress = new Uri("http://103.130.164.28:1242/api/main/") }; Server Permanent
+    var client = new HttpClient { BaseAddress = new Uri("http://103.38.108.86:1242/api/main/") }; // Server Sementara
     client.DefaultRequestHeaders.Add("TokenId", "240782");
     client.DefaultRequestHeaders.Add("SenderId", "WKSP");
     client.DefaultRequestHeaders.Add("TransmitUniqueId", "12345");
