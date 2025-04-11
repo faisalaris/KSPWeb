@@ -2,8 +2,12 @@
     position: relative;
     display: flex;
     flex-direction: column;
-    background: url('/images/backgroundlayout.png') no-repeat center center fixed;
-    background-size: cover;
+    background:
+    /*url('/images/backgroundlayout3.png'),  Gambar ketiga */
+    url('/images/backgroundlayout2.png') no-repeat center center fixed; /* Gambar kedua */
+    /*background-repeat: no-repeat;*/
+    background-size: 40%;
+    /*background-position: 100% 40%;*/
 }
 
     .page::before {
@@ -13,7 +17,7 @@
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(255, 255, 255, 0.7); /* Transparansi 30% */
+        background: rgba(255, 255, 255, 0.95); /* Transparansi 30% */
         z-index: 0;
     }
 
@@ -22,7 +26,19 @@
         z-index: 1;
     }
 
+@media (max-width: 768px) {
+    .page {
+        background: url('/images/backgroundlayout2.png') no-repeat center center fixed;
+        background-size: contain; /* Agar gambar tidak terpotong */
+    }
+}
 
+@media (max-width: 480px) {
+    .page {
+        background: url('/images/backgroundlayout2.png') no-repeat center center fixed;
+        background-size: contain; /* Agar gambar tidak terpotong */
+    }
+}
 main {
     flex: 1;
 }

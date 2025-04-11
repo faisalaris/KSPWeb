@@ -1,51 +1,24 @@
 ﻿<style>
-    .navbar-custom {
-        background: url('/images/NavKSP.jpg') no-repeat center center;
-        background-size: cover;
-        height: 80px; /* Sesuaikan dengan tinggi navbar */
-    }
-    /* Navbar atas dengan border dan shadow */
+    /* Navbar Background Gradasi */
     .top-row {
-        background: linear-gradient(to right, #007f00, #005700) !important;
-        border-bottom: 3px solid #004000;
-        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-        padding: 10px;
+        background: linear-gradient(to right, white, white) !important;
     }
 
-    /* Sidebar dengan border kanan dan shadow */
+    /* Sidebar Background Gradasi */
     .nav-container {
-        background: url('/images/NavKSP4.jpg') no-repeat center center;
-        background-size: cover;
-        height: 100vh; /* Tinggi tetap layar penuh */
-        width: 255px; /* Lebar sidebar default */
+        background: linear-gradient(to bottom, white, white);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between; /* Menjaga logo tetap di bawah */
         padding-top: 10px;
-        transition: all 0.3s ease-in-out;
     }
-
-        /* ✅ RESPONSIVE UNTUK LAYAR KECIL (SMARTPHONE) */
-    @@media (max-width: 768px) {
-    .nav-container {
-        width: 100px; /* Mengecilkan sidebar di layar kecil */
-        background-size: contain; /* Menyesuaikan gambar */
-        height: 100%; /* Pastikan gambar tidak terpotong */
-    }
-}
-
-    @@media (max-width: 480px) {
-    .nav-container {
-        width: 80px; /* Lebih kecil lagi untuk layar sangat kecil */
-        background-size: contain;
-        height: 100%;
-    }
-}
 
     .nav-scrollable {
         overflow-y: auto;
-        flex-grow: 1;
-        padding-bottom: 100px; /* Agar menu tidak menumpuk dengan logo */
+        flex-grow: 1; /* Menu tetap fleksibel */
     }
 
-    /* Posisi Logo di Tengah */
     .logo-container {
         position: absolute;
         top: 50%;
@@ -61,78 +34,42 @@
         transition: opacity 0.3s ease-in-out, transform 0.3s ease-in-out;
     }
 
-        /* Hover effect agar lebih interaktif */
-        .logo:hover {
-            opacity: 1;
-            transform: translate(-50%, -50%) scale(1.1);
-        }
-
-    /* Styling menu */
-    .nav-item {
-        padding: 10px;
-    }
-
     .nav-link {
         color: white !important;
         font-weight: bold;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        padding: 12px;
-        border-radius: 8px;
-        transition: all 0.3s ease-in-out;
-        font-size: 16px;
+        display: block;
+        padding: 10px;
+        border-radius: 5px;
+        transition: background 0.3s;
     }
 
         .nav-link:hover {
-            background: rgba(255, 255, 255, 0.2);
-            transform: scale(1.05);
-            box-shadow: 0px 2px 8px rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.3);
         }
-
-    /* Icon styling */
-    .bi {
-        font-size: 20px;
-    }
-
-    /* Navbar Toggler */
-    .navbar-toggler {
-        border: none;
-        outline: none;
-    }
-
-    .navbar-toggler-icon {
-        filter: invert(1);
-    }
 </style>
 
-<!-- <div class="top-row navbar navbar-dark">
+<!-- <div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">KSP</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
-        </button>
+        </button> 
     </div>
-</div> -->
+</div> --> 
 
-<div class="nav-container">
-    <!--<nav class="flex-column nav-scrollable">
-        <div class="nav-item">
+<div class="@NavMenuCssClass nav-container" @onclick="ToggleNavMenu">
+    <nav class="flex-column nav-scrollable">
+        <div class="nav-item px-3">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill"></span> Home
+                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
             </NavLink>
         </div>
-        <div class="nav-item">
-            <NavLink class="nav-link" href="/loanlist">
-                <span class="bi bi-list-check"></span> Loan List
-            </NavLink>
-        </div>
-    </nav>  -->
+    </nav>
 
-    <!-- Logo di tengah navbar -->
-   <!-- <div class="logo-container">
+    <!-- Logo di bagian bawah navbar -->
+    <div class="logo-container">
         <img src="/images/logo.png" alt="Logo" class="logo" />
-    </div> -->
+    </div>
 </div>
 
 @code {
